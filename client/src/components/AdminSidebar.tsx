@@ -1,5 +1,5 @@
 import { Link, useLocation } from "wouter";
-import { Package, Trophy, Tag, ShoppingCart, Settings, LogOut, Image } from "lucide-react";
+import { Package, Trophy, Tag, ShoppingCart, Settings, LogOut, Image, Sparkles } from "lucide-react";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +11,7 @@ export function AdminSidebar() {
     { href: "/admin/packages", icon: Package, label: "Packages" },
     { href: "/admin/rankings", icon: Trophy, label: "Rankings" },
     { href: "/admin/gallery", icon: Image, label: "Gallery" },
+    { href: "/admin/hero", icon: Sparkles, label: "Hero Section" },
     { href: "/admin/coupons", icon: Tag, label: "Coupons" },
     { href: "/admin/orders", icon: ShoppingCart, label: "Orders" },
     { href: "/admin/settings", icon: Settings, label: "Settings" },

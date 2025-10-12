@@ -219,3 +219,19 @@ export const insertGalleryImageSchema = createInsertSchema(galleryImages).omit({
 });
 export type InsertGalleryImage = z.infer<typeof insertGalleryImageSchema>;
 export type GalleryImage = typeof galleryImages.$inferSelect;
+
+// Hero settings table - Manage hero section images
+export const heroSettings = pgTable("hero_settings", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  backgroundImage: text("background_image").notNull(), // Main hero background
+  videoThumbnail: text("video_thumbnail"), // Optional video thumbnail
+  isActive: boolean("is_active").notNull().default(true),
+  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+});
+
+export const insertHeroSettingSchema = createInsertSchema(heroSettings).omit({
+  id: true,
+  updatedAt: true,
+});
+export type InsertHeroSetting = z.infer<typeof insertHeroSettingSchema>;
+export type HeroSetting = typeof heroSettings.$inferSelect;

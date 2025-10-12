@@ -10,7 +10,8 @@ import {
   type PlayerRanking, type InsertPlayerRanking,
   type PaymentSetting, type InsertPaymentSetting,
   type GalleryImage, type InsertGalleryImage,
-  users, packages, cartItems, orders, orderItems, redemptionCodes, coupons, pendingPayments, playerRankings, paymentSettings, galleryImages
+  type HeroSetting, type InsertHeroSetting,
+  users, packages, cartItems, orders, orderItems, redemptionCodes, coupons, pendingPayments, playerRankings, paymentSettings, galleryImages, heroSettings
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, sql, asc } from "drizzle-orm";
@@ -88,6 +89,13 @@ export interface IStorage {
   createGalleryImage(image: InsertGalleryImage): Promise<GalleryImage>;
   updateGalleryImage(id: string, image: Partial<InsertGalleryImage>): Promise<GalleryImage | undefined>;
   deleteGalleryImage(id: string): Promise<boolean>;
+  
+  // Hero settings operations
+  getActiveHeroSetting(): Promise<HeroSetting | undefined>;
+  getAllHeroSettings(): Promise<HeroSetting[]>;
+  createHeroSetting(setting: InsertHeroSetting): Promise<HeroSetting>;
+  updateHeroSetting(id: string, setting: Partial<InsertHeroSetting>): Promise<HeroSetting | undefined>;
+  deleteHeroSetting(id: string): Promise<boolean>;
 }
 
 export class DbStorage implements IStorage {
@@ -417,6 +425,40 @@ export class DbStorage implements IStorage {
 
   async deleteGalleryImage(id: string): Promise<boolean> {
     const result = await db.delete(galleryImages).where(eq(galleryImages.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Hero settings operations
+  async getActiveHeroSetting(): Promise<HeroSetting | undefined> {
+    const result = await db.select()
+      .from(heroSettings)
+      .where(eq(heroSettings.isActive, true))
+      .orderBy(sql`${heroSettings.updatedAt} DESC`)
+      .limit(1);
+    return result[0];
+  }
+
+  async getAllHeroSettings(): Promise<HeroSetting[]> {
+    return await db.select()
+      .from(heroSettings)
+      .orderBy(sql`${heroSettings.updatedAt} DESC`);
+  }
+
+  async createHeroSetting(setting: InsertHeroSetting): Promise<HeroSetting> {
+    const result = await db.insert(heroSettings).values(setting).returning();
+    return result[0];
+  }
+
+  async updateHeroSetting(id: string, setting: Partial<InsertHeroSetting>): Promise<HeroSetting | undefined> {
+    const result = await db.update(heroSettings)
+      .set({ ...setting, updatedAt: new Date() })
+      .where(eq(heroSettings.id, id))
+      .returning();
+    return result[0];
+  }
+
+  async deleteHeroSetting(id: string): Promise<boolean> {
+    const result = await db.delete(heroSettings).where(eq(heroSettings.id, id)).returning();
     return result.length > 0;
   }
 }

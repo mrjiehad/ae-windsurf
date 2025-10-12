@@ -1431,6 +1431,67 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Public: Get active hero setting
+  app.get("/api/hero", async (req, res) => {
+    try {
+      const setting = await storage.getActiveHeroSetting();
+      res.json(setting);
+    } catch (error: any) {
+      console.error("Hero setting fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch hero setting" });
+    }
+  });
+
+  // Admin: Get all hero settings
+  app.get("/api/admin/hero", requireAdmin, async (req, res) => {
+    try {
+      const settings = await storage.getAllHeroSettings();
+      res.json(settings);
+    } catch (error: any) {
+      console.error("Admin hero settings fetch error:", error);
+      res.status(500).json({ message: "Failed to fetch hero settings" });
+    }
+  });
+
+  // Admin: Create hero setting
+  app.post("/api/admin/hero", requireAdmin, async (req, res) => {
+    try {
+      const setting = await storage.createHeroSetting(req.body);
+      res.json(setting);
+    } catch (error: any) {
+      console.error("Admin hero setting creation error:", error);
+      res.status(500).json({ message: "Failed to create hero setting" });
+    }
+  });
+
+  // Admin: Update hero setting
+  app.patch("/api/admin/hero/:id", requireAdmin, async (req, res) => {
+    try {
+      const setting = await storage.updateHeroSetting(req.params.id, req.body);
+      if (!setting) {
+        return res.status(404).json({ message: "Hero setting not found" });
+      }
+      res.json(setting);
+    } catch (error: any) {
+      console.error("Admin hero setting update error:", error);
+      res.status(500).json({ message: "Failed to update hero setting" });
+    }
+  });
+
+  // Admin: Delete hero setting
+  app.delete("/api/admin/hero/:id", requireAdmin, async (req, res) => {
+    try {
+      const success = await storage.deleteHeroSetting(req.params.id);
+      if (!success) {
+        return res.status(404).json({ message: "Hero setting not found" });
+      }
+      res.json({ message: "Hero setting deleted successfully" });
+    } catch (error: any) {
+      console.error("Admin hero setting deletion error:", error);
+      res.status(500).json({ message: "Failed to delete hero setting" });
+    }
+  });
+
   const httpServer = createServer(app);
 
   return httpServer;

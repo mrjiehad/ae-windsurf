@@ -108,16 +108,24 @@ export default function Rankings() {
             </div>
           ) : (
             <>
-              {/* Top 3 Podium */}
+              {/* Top 3 Podium - Completely Redesigned */}
               {top3.length > 0 && (
                 <div className="mb-24">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto items-end">
                     {top3.map((player, index) => {
                       const orderClass = getPodiumOrder(player.rank);
                       const isWinner = player.rank === 1;
-                      const heightClass = player.rank === 1 ? 'min-h-[450px]' : player.rank === 2 ? 'min-h-[380px]' : 'min-h-[350px]';
+                      const heightClass = player.rank === 1 ? 'min-h-[550px]' : player.rank === 2 ? 'min-h-[480px]' : 'min-h-[450px]';
                       // Use uploaded image if available, otherwise use default
                       const characterImage = player.imageUrl || characterImages[index % characterImages.length];
+                      
+                      // Color schemes for each rank
+                      const rankColors = {
+                        1: { border: 'border-neon-yellow', glow: 'rgba(255, 215, 0, 0.6)', bg: 'from-yellow-900/20 via-black to-black', accent: 'bg-neon-yellow text-black' },
+                        2: { border: 'border-gray-300', glow: 'rgba(192, 192, 192, 0.4)', bg: 'from-gray-800/20 via-black to-black', accent: 'bg-gray-300 text-black' },
+                        3: { border: 'border-amber-600', glow: 'rgba(217, 119, 6, 0.4)', bg: 'from-amber-900/20 via-black to-black', accent: 'bg-amber-600 text-white' }
+                      };
+                      const colors = rankColors[player.rank as keyof typeof rankColors];
                       
                       return (
                         <div
@@ -125,88 +133,83 @@ export default function Rankings() {
                           className={`${orderClass} relative group`}
                           data-testid={`podium-${player.rank}`}
                         >
-                          <div className={`relative ${heightClass} bg-gradient-to-br from-[#1a1a1a] via-[#000000] to-black border-4 ${
-                            isWinner ? 'border-neon-yellow' : 'border-white/20'
-                          } rounded-3xl overflow-hidden transition-all duration-500 hover:scale-105 hover:border-neon-yellow`}
-                          style={isWinner ? { 
-                            boxShadow: "0 0 60px rgba(255, 215, 0, 0.4), inset 0 0 80px rgba(255, 215, 0, 0.1)" 
-                          } : {
-                            boxShadow: "0 20px 60px rgba(0, 0, 0, 0.5)"
+                          {/* Main Card */}
+                          <div className={`relative ${heightClass} bg-gradient-to-br ${colors.bg} border-4 ${colors.border} rounded-2xl overflow-hidden transition-all duration-500 hover:scale-105 hover:shadow-2xl`}
+                          style={{ 
+                            boxShadow: `0 0 40px ${colors.glow}, 0 20px 60px rgba(0, 0, 0, 0.8)` 
                           }}>
                             
-                            {/* Character Background Image */}
-                            <div className="absolute inset-0">
+                            {/* Top Section - Image Display (60% height) */}
+                            <div className="relative h-[60%] overflow-hidden">
+                              {/* Clear Character Image */}
                               <img 
                                 src={characterImage} 
                                 alt={player.playerName}
-                                className="w-full h-full object-cover opacity-30 group-hover:opacity-40 transition-opacity duration-500"
-                                style={{ objectPosition: 'center' }}
+                                className="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-700"
                               />
-                              <div className={`absolute inset-0 bg-gradient-to-t ${
-                                isWinner 
-                                  ? 'from-black via-black/90 to-transparent' 
-                                  : 'from-black via-black/70 to-transparent'
-                              }`} />
-                            </div>
-
-                            {/* Rank Badge */}
-                            <div className="absolute top-6 right-6 z-10">
-                              <div className={`w-16 h-16 rounded-full ${
-                                isWinner ? 'bg-neon-yellow' : 'bg-gray-700'
-                              } border-4 border-black flex items-center justify-center shadow-2xl`}>
-                                <span className={`text-3xl font-bold font-bebas ${
-                                  isWinner ? 'text-black' : 'text-white'
-                                }`}>#{player.rank}</span>
+                              {/* Subtle gradient overlay only at bottom */}
+                              <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
+                              
+                              {/* Rank Badge - Top Left */}
+                              <div className="absolute top-4 left-4 z-10">
+                                <div className={`${colors.accent} px-6 py-3 rounded-xl shadow-2xl border-2 border-black/50`}>
+                                  <span className="text-4xl font-bold font-bebas">#{player.rank}</span>
+                                </div>
                               </div>
-                            </div>
 
-                            {/* Content */}
-                            <div className="absolute bottom-0 left-0 right-0 p-8 z-10">
-                              {/* Winner Crown Icon */}
+                              {/* Winner Crown - Floating */}
                               {isWinner && (
-                                <div className="absolute -top-12 left-1/2 transform -translate-x-1/2">
+                                <div className="absolute top-4 right-4 z-10">
                                   <Crown className="w-16 h-16 fill-neon-yellow text-neon-yellow animate-bounce" 
-                                         style={{ filter: "drop-shadow(0 0 20px rgba(255, 215, 0, 1))" }} />
+                                         style={{ filter: "drop-shadow(0 0 30px rgba(255, 215, 0, 1))" }} />
                                 </div>
                               )}
-                              
+                            </div>
+
+                            {/* Bottom Section - Player Info (40% height) */}
+                            <div className="relative h-[40%] bg-black/95 p-6 flex flex-col justify-between">
                               {/* Player Name */}
-                              <div className="text-center mb-4">
-                                <p className={`${isWinner ? 'text-4xl md:text-5xl' : 'text-3xl md:text-4xl'} font-russo text-white tracking-wider mb-3 uppercase`} 
+                              <div className="text-center">
+                                <h3 className={`${isWinner ? 'text-4xl' : 'text-3xl'} font-russo text-white tracking-wider mb-2 uppercase`} 
                                    data-testid={`player-name-${player.rank}`}
-                                   style={isWinner ? { textShadow: "0 0 30px rgba(255, 215, 0, 0.8)" } : { textShadow: "0 2px 10px rgba(0, 0, 0, 0.8)" }}>
+                                   style={{ textShadow: `0 0 20px ${colors.glow}` }}>
                                   {player.playerName}
-                                </p>
-                                <div className={`inline-block px-6 py-2 ${
-                                  isWinner ? 'bg-neon-yellow text-black' : 'bg-white/10 border-2 border-white/30 text-white'
-                                }`}>
-                                  <span className={`font-russo font-bold text-sm uppercase tracking-wider`}>
-                                    {isWinner ? '👑 CHAMPION 👑' : `RANK #${player.rank}`}
+                                </h3>
+                                <div className={`inline-flex items-center gap-2 ${colors.accent} px-4 py-1.5 rounded-full`}>
+                                  <Trophy className="w-4 h-4" />
+                                  <span className="font-russo font-bold text-xs uppercase tracking-wider">
+                                    {isWinner ? 'CHAMPION' : player.rank === 2 ? 'RUNNER-UP' : 'THIRD PLACE'}
                                   </span>
                                 </div>
                               </div>
 
-                              {/* Stars - Max 10 displayed */}
-                              <div className="flex gap-1.5 flex-wrap justify-center mb-3">
-                                {Array.from({ length: Math.min(player.stars, 10) }).map((_, i) => (
-                                  <Crown
-                                    key={i}
-                                    className={`${isWinner ? 'w-8 h-8' : 'w-7 h-7'} fill-neon-yellow text-neon-yellow`}
-                                    style={{ filter: "drop-shadow(0 0 8px rgba(255, 215, 0, 1))" }}
-                                  />
-                                ))}
-                                {player.stars > 10 && (
-                                  <span className={`${isWinner ? 'text-3xl' : 'text-2xl'} text-neon-yellow font-bold ml-2 font-bebas`}>
-                                    +{player.stars - 10}
+                              {/* Stars Display */}
+                              <div className="space-y-2">
+                                <div className="flex gap-1 flex-wrap justify-center">
+                                  {Array.from({ length: Math.min(player.stars, 5) }).map((_, i) => (
+                                    <Star
+                                      key={i}
+                                      className={`w-6 h-6 fill-neon-yellow text-neon-yellow`}
+                                      style={{ filter: "drop-shadow(0 0 6px rgba(255, 215, 0, 0.8))" }}
+                                    />
+                                  ))}
+                                  {player.stars > 5 && (
+                                    <span className="text-neon-yellow font-bold text-lg font-bebas ml-1">
+                                      +{player.stars - 5}
+                                    </span>
+                                  )}
+                                </div>
+                                <div className={`text-center ${colors.accent} py-2 rounded-lg`}>
+                                  <span className={`font-bebas text-2xl font-bold`}>
+                                    {player.stars} STARS
                                   </span>
-                                )}
+                                </div>
                               </div>
-                              <p className={`text-neon-yellow font-bebas text-center ${
-                                isWinner ? 'text-4xl' : 'text-3xl'
-                              }`}>
-                                ⭐ {player.stars} STARS
-                              </p>
                             </div>
+
+                            {/* Decorative Corner Accents */}
+                            <div className={`absolute top-0 right-0 w-32 h-32 ${colors.border} opacity-10 rounded-bl-full`} />
+                            <div className={`absolute bottom-0 left-0 w-32 h-32 ${colors.border} opacity-10 rounded-tr-full`} />
                           </div>
                         </div>
                       );
