@@ -146,8 +146,8 @@ export default function Rankings() {
                           <div className={`relative ${heightClass} bg-zinc-900 border-2 ${style.border} overflow-hidden ${style.glow} transition-all duration-500 hover:scale-[1.03] hover:${style.glow.replace('0.6', '0.8')}`}
                                style={{ clipPath: 'polygon(0 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%)' }}>
                             
-                            {/* Character Image - 70% */}
-                            <div className="relative h-[70%] overflow-hidden">
+                            {/* Character Image - 60% */}
+                            <div className="relative h-[60%] overflow-hidden">
                               <img 
                                 src={characterImage} 
                                 alt={player.playerName}
@@ -177,9 +177,9 @@ export default function Rankings() {
                               </div>
                             </div>
 
-                            {/* Info Section - 30% */}
-                            <div className="relative h-[30%] bg-black/95 p-4 flex flex-col justify-center gap-3">
-                              <h3 className="text-2xl font-bebas text-white uppercase tracking-widest text-center truncate px-2" 
+                            {/* Info Section - 40% */}
+                            <div className="relative h-[40%] bg-black/95 p-5 flex flex-col justify-between">
+                              <h3 className="text-2xl font-bebas text-white uppercase tracking-widest text-center" 
                                  data-testid={`player-name-${player.rank}`}
                                  style={{ textShadow: style.textGlow }}>
                                 {player.playerName}
