@@ -29,51 +29,110 @@ const getCurrentMonth = () => {
   return months[new Date().getMonth()];
 };
 
-// Lightning Effect Component
-function LightningBolt({ delay = 0 }: { delay?: number }) {
+// Strong Lightning Effect Component
+function StrongLightning({ side }: { side: 'left' | 'right' }) {
   const [isVisible, setIsVisible] = useState(false);
-  const [position, setPosition] = useState({ x: 0, y: 0 });
+  const [intensity, setIntensity] = useState(1);
 
   useEffect(() => {
     const triggerLightning = () => {
-      // Random position
-      setPosition({
-        x: Math.random() * 100,
-        y: Math.random() * 50,
-      });
-      
+      // Flash sequence: quick flashes for realistic lightning
       setIsVisible(true);
-      setTimeout(() => setIsVisible(false), 200);
+      setIntensity(1);
       
-      // Random next strike between 3-8 seconds
-      const nextStrike = 3000 + Math.random() * 5000;
+      // First flash
+      setTimeout(() => setIsVisible(false), 100);
+      
+      // Second flash (stronger)
+      setTimeout(() => {
+        setIsVisible(true);
+        setIntensity(1.5);
+      }, 150);
+      
+      setTimeout(() => setIsVisible(false), 250);
+      
+      // Third flash (weaker)
+      setTimeout(() => {
+        setIsVisible(true);
+        setIntensity(0.8);
+      }, 300);
+      
+      setTimeout(() => setIsVisible(false), 380);
+      
+      // Random next strike between 4-10 seconds
+      const nextStrike = 4000 + Math.random() * 6000;
       setTimeout(triggerLightning, nextStrike);
     };
 
-    const initialDelay = setTimeout(triggerLightning, delay);
+    const initialDelay = setTimeout(triggerLightning, side === 'left' ? 1000 : 2500);
     return () => clearTimeout(initialDelay);
-  }, [delay]);
+  }, [side]);
 
   if (!isVisible) return null;
 
   return (
-    <div
-      className="absolute pointer-events-none z-20"
-      style={{
-        left: `${position.x}%`,
-        top: `${position.y}%`,
-      }}
-    >
-      <Zap
-        className="text-yellow-400 animate-pulse"
+    <>
+      {/* Lightning Bolt SVG */}
+      <div
+        className={`absolute top-0 pointer-events-none z-30 ${
+          side === 'left' ? 'left-0' : 'right-0'
+        }`}
         style={{
-          width: '60px',
-          height: '60px',
-          filter: 'drop-shadow(0 0 20px rgba(250, 204, 21, 0.9)) drop-shadow(0 0 40px rgba(250, 204, 21, 0.6))',
-          animation: 'lightning 0.2s ease-in-out',
+          width: '400px',
+          height: '100vh',
+          opacity: intensity,
+        }}
+      >
+        <svg
+          viewBox="0 0 200 800"
+          className="w-full h-full"
+          style={{
+            filter: `drop-shadow(0 0 30px rgba(250, 204, 21, ${intensity})) drop-shadow(0 0 60px rgba(250, 204, 21, ${intensity * 0.8}))`,
+          }}
+        >
+          <path
+            d={
+              side === 'left'
+                ? 'M 20 0 L 80 200 L 50 200 L 100 400 L 60 400 L 120 650 L 80 650 L 140 800'
+                : 'M 180 0 L 120 200 L 150 200 L 100 400 L 140 400 L 80 650 L 120 650 L 60 800'
+            }
+            stroke="#FACC15"
+            strokeWidth="4"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            style={{
+              filter: 'drop-shadow(0 0 10px rgba(250, 204, 21, 1))',
+            }}
+          />
+          {/* Inner glow */}
+          <path
+            d={
+              side === 'left'
+                ? 'M 20 0 L 80 200 L 50 200 L 100 400 L 60 400 L 120 650 L 80 650 L 140 800'
+                : 'M 180 0 L 120 200 L 150 200 L 100 400 L 140 400 L 80 650 L 120 650 L 60 800'
+            }
+            stroke="#FFF"
+            strokeWidth="2"
+            fill="none"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity="0.8"
+          />
+        </svg>
+      </div>
+
+      {/* Flash overlay for screen illumination */}
+      <div
+        className={`absolute inset-0 pointer-events-none z-20 ${
+          side === 'left' ? 'bg-gradient-to-r' : 'bg-gradient-to-l'
+        } from-yellow-400/30 via-yellow-400/10 to-transparent`}
+        style={{
+          opacity: intensity * 0.6,
+          animation: 'flash 0.1s ease-out',
         }}
       />
-    </div>
+    </>
   );
 }
 
@@ -116,11 +175,9 @@ export default function Rankings() {
           <div className="absolute inset-0 bg-gradient-to-b from-[#000000]/80 via-[#000000]/90 to-[#000000]" />
         </div>
 
-        {/* Lightning Effects - Multiple bolts with different delays */}
-        <LightningBolt delay={0} />
-        <LightningBolt delay={1500} />
-        <LightningBolt delay={3000} />
-        <LightningBolt delay={4500} />
+        {/* Strong Lightning Effects from upper corners */}
+        <StrongLightning side="left" />
+        <StrongLightning side="right" />
 
         <div className="container mx-auto px-4 py-20 relative z-10">
           {/* Title - Smaller Size */}
