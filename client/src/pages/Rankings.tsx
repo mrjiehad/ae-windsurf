@@ -1,10 +1,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { Crown, Trophy, Flame, Skull, Swords, Target } from "lucide-react";
+import { Crown, Trophy, Star, Medal } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { PlayerRanking } from "@shared/schema";
-import { useState, useEffect } from "react";
 
 import sultan1 from "@assets/S2_1759294544784.png";
 import sultan2 from "@assets/S1_1759294544782.png";
@@ -28,113 +27,6 @@ const getCurrentMonth = () => {
   ];
   return months[new Date().getMonth()];
 };
-
-// Strong Lightning Effect Component
-function StrongLightning({ side }: { side: 'left' | 'right' }) {
-  const [isVisible, setIsVisible] = useState(false);
-  const [intensity, setIntensity] = useState(1);
-
-  useEffect(() => {
-    const triggerLightning = () => {
-      // Flash sequence: quick flashes for realistic lightning
-      setIsVisible(true);
-      setIntensity(1);
-      
-      // First flash
-      setTimeout(() => setIsVisible(false), 100);
-      
-      // Second flash (stronger)
-      setTimeout(() => {
-        setIsVisible(true);
-        setIntensity(1.5);
-      }, 150);
-      
-      setTimeout(() => setIsVisible(false), 250);
-      
-      // Third flash (weaker)
-      setTimeout(() => {
-        setIsVisible(true);
-        setIntensity(0.8);
-      }, 300);
-      
-      setTimeout(() => setIsVisible(false), 380);
-      
-      // Random next strike between 4-10 seconds
-      const nextStrike = 4000 + Math.random() * 6000;
-      setTimeout(triggerLightning, nextStrike);
-    };
-
-    const initialDelay = setTimeout(triggerLightning, side === 'left' ? 1000 : 2500);
-    return () => clearTimeout(initialDelay);
-  }, [side]);
-
-  if (!isVisible) return null;
-
-  return (
-    <>
-      {/* Lightning Bolt SVG */}
-      <div
-        className={`absolute top-0 pointer-events-none z-30 ${
-          side === 'left' ? 'left-0' : 'right-0'
-        }`}
-        style={{
-          width: '400px',
-          height: '100vh',
-          opacity: intensity,
-        }}
-      >
-        <svg
-          viewBox="0 0 200 800"
-          className="w-full h-full"
-          style={{
-            filter: `drop-shadow(0 0 30px rgba(250, 204, 21, ${intensity})) drop-shadow(0 0 60px rgba(250, 204, 21, ${intensity * 0.8}))`,
-          }}
-        >
-          <path
-            d={
-              side === 'left'
-                ? 'M 20 0 L 80 200 L 50 200 L 100 400 L 60 400 L 120 650 L 80 650 L 140 800'
-                : 'M 180 0 L 120 200 L 150 200 L 100 400 L 140 400 L 80 650 L 120 650 L 60 800'
-            }
-            stroke="#FACC15"
-            strokeWidth="4"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            style={{
-              filter: 'drop-shadow(0 0 10px rgba(250, 204, 21, 1))',
-            }}
-          />
-          {/* Inner glow */}
-          <path
-            d={
-              side === 'left'
-                ? 'M 20 0 L 80 200 L 50 200 L 100 400 L 60 400 L 120 650 L 80 650 L 140 800'
-                : 'M 180 0 L 120 200 L 150 200 L 100 400 L 140 400 L 80 650 L 120 650 L 60 800'
-            }
-            stroke="#FFF"
-            strokeWidth="2"
-            fill="none"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            opacity="0.8"
-          />
-        </svg>
-      </div>
-
-      {/* Flash overlay for screen illumination */}
-      <div
-        className={`absolute inset-0 pointer-events-none z-20 ${
-          side === 'left' ? 'bg-gradient-to-r' : 'bg-gradient-to-l'
-        } from-yellow-400/30 via-yellow-400/10 to-transparent`}
-        style={{
-          opacity: intensity * 0.6,
-          animation: 'flash 0.1s ease-out',
-        }}
-      />
-    </>
-  );
-}
 
 export default function Rankings() {
   const { data: rankings = [], isLoading } = useQuery<PlayerRankingWithUser[]>({
@@ -163,47 +55,36 @@ export default function Rankings() {
     <div className="min-h-screen bg-black">
       <Header cartItemCount={0} onCartClick={() => {}} />
       
-      {/* Killer Gaming Background */}
+      {/* Black & Yellow Background */}
       <div className="relative min-h-screen bg-black overflow-hidden">
-        {/* Dark Grunge Background */}
+        {/* Background */}
         <div className="absolute inset-0 z-0">
           <img 
             src={cityBg} 
             alt="Background"
-            className="w-full h-full object-cover opacity-10 grayscale"
+            className="w-full h-full object-cover opacity-5"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-black via-zinc-900/95 to-black" />
-          {/* Hexagon pattern overlay */}
-          <div className="absolute inset-0 opacity-5" style={{
-            backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M30 0l25.98 15v30L30 60 4.02 45V15z' fill='none' stroke='%23ffffff' stroke-width='1'/%3E%3C/svg%3E")`,
-            backgroundSize: '60px 60px'
-          }} />
+          <div className="absolute inset-0 bg-gradient-to-b from-black via-black to-zinc-950" />
         </div>
 
-        {/* Lightning Effects */}
-        <StrongLightning side="left" />
-        <StrongLightning side="right" />
-
-        <div className="container mx-auto px-4 py-12 relative z-10">
-          {/* Killer Header */}
+        <div className="container mx-auto px-4 py-16 relative z-10">
+          {/* Header - Sultan of Month */}
           <div className="text-center mb-16">
-            <div className="inline-flex items-center gap-4 mb-6">
-              <Swords className="w-10 h-10 text-red-500" />
-              <h1 className="text-6xl md:text-7xl font-bebas text-white tracking-wider" 
-                  style={{ 
-                    textShadow: "0 0 20px rgba(239, 68, 68, 0.5), 0 0 40px rgba(0, 0, 0, 0.8)",
-                    WebkitTextStroke: "2px rgba(239, 68, 68, 0.3)"
-                  }}
-                  data-testid="title-rankings">
-                KILL LEADERBOARD
-              </h1>
-              <Swords className="w-10 h-10 text-red-500" />
+            <div className="mb-4">
+              <Trophy className="w-16 h-16 text-yellow-500 mx-auto mb-4" 
+                     style={{ filter: "drop-shadow(0 0 20px rgba(234, 179, 8, 0.6))" }} />
             </div>
-            <div className="flex items-center justify-center gap-3 text-zinc-400 uppercase tracking-widest text-sm font-russo">
-              <Target className="w-4 h-4" />
-              <span>{currentMonth} SEASON</span>
-              <Flame className="w-4 h-4 text-orange-500" />
-            </div>
+            <h1 className="text-5xl md:text-6xl font-bebas text-yellow-500 tracking-wider mb-2" 
+                style={{ 
+                  textShadow: "0 0 30px rgba(234, 179, 8, 0.5), 2px 2px 0px rgba(0, 0, 0, 0.8)"
+                }}
+                data-testid="title-rankings">
+              SULTAN OF {getCurrentMonth()}
+            </h1>
+            <div className="h-1 w-64 mx-auto bg-gradient-to-r from-transparent via-yellow-500 to-transparent mb-4" />
+            <p className="text-zinc-400 uppercase tracking-widest text-sm font-russo">
+              Monthly Leaderboard
+            </p>
           </div>
 
           {isLoading ? (
@@ -227,31 +108,31 @@ export default function Rankings() {
                       const heightClass = player.rank === 1 ? 'h-[480px]' : player.rank === 2 ? 'h-[420px]' : 'h-[400px]';
                       const characterImage = player.imageUrl || characterImages[index % characterImages.length];
                       
-                      // Killer rank styles
+                      // Black & Yellow rank styles
                       const rankStyles = {
                         1: { 
-                          border: 'border-red-600',
-                          glow: 'shadow-[0_0_50px_rgba(220,38,38,0.6),0_0_100px_rgba(220,38,38,0.3)]',
-                          accent: 'bg-gradient-to-r from-red-600 via-red-500 to-orange-500',
-                          textGlow: '0 0 20px rgba(220,38,38,0.8)',
-                          icon: <Skull className="w-6 h-6" />,
-                          label: 'APEX PREDATOR'
+                          border: 'border-yellow-500',
+                          glow: 'shadow-[0_0_50px_rgba(234,179,8,0.6)]',
+                          accent: 'bg-gradient-to-r from-yellow-500 to-yellow-600',
+                          textGlow: '0 0 20px rgba(234,179,8,0.8)',
+                          icon: <Crown className="w-6 h-6" />,
+                          label: 'CHAMPION'
                         },
                         2: { 
-                          border: 'border-zinc-400',
-                          glow: 'shadow-[0_0_40px_rgba(161,161,170,0.4)]',
-                          accent: 'bg-gradient-to-r from-zinc-400 to-zinc-500',
-                          textGlow: '0 0 15px rgba(161,161,170,0.6)',
-                          icon: <Trophy className="w-6 h-6" />,
-                          label: 'ELITE KILLER'
+                          border: 'border-zinc-500',
+                          glow: 'shadow-[0_0_40px_rgba(113,113,122,0.4)]',
+                          accent: 'bg-gradient-to-r from-zinc-500 to-zinc-600',
+                          textGlow: '0 0 15px rgba(113,113,122,0.6)',
+                          icon: <Medal className="w-6 h-6" />,
+                          label: 'RUNNER-UP'
                         },
                         3: { 
-                          border: 'border-amber-700',
-                          glow: 'shadow-[0_0_40px_rgba(180,83,9,0.4)]',
-                          accent: 'bg-gradient-to-r from-amber-700 to-amber-800',
-                          textGlow: '0 0 15px rgba(180,83,9,0.6)',
-                          icon: <Flame className="w-6 h-6" />,
-                          label: 'ASSASSIN'
+                          border: 'border-amber-600',
+                          glow: 'shadow-[0_0_40px_rgba(217,119,6,0.4)]',
+                          accent: 'bg-gradient-to-r from-amber-600 to-amber-700',
+                          textGlow: '0 0 15px rgba(217,119,6,0.6)',
+                          icon: <Star className="w-6 h-6" />,
+                          label: 'THIRD PLACE'
                         }
                       };
                       const style = rankStyles[player.rank as keyof typeof rankStyles];
@@ -304,15 +185,15 @@ export default function Rankings() {
                                 {player.playerName}
                               </h3>
 
-                              {/* Kill Count */}
+                              {/* Stars Display */}
                               <div className="flex items-center justify-center gap-3">
                                 <div className="flex gap-1">
                                   {Array.from({ length: Math.min(player.stars, 5) }).map((_, i) => (
-                                    <Skull key={i} className="w-5 h-5 fill-red-500 text-red-500" />
+                                    <Star key={i} className="w-5 h-5 fill-yellow-500 text-yellow-500" />
                                   ))}
                                 </div>
                                 {player.stars > 5 && (
-                                  <span className="text-red-500 font-bold text-sm font-bebas">
+                                  <span className="text-yellow-500 font-bold text-sm font-bebas">
                                     +{player.stars - 5}
                                   </span>
                                 )}
@@ -320,9 +201,9 @@ export default function Rankings() {
 
                               <div className={`${style.accent} px-4 py-2 flex items-center justify-center gap-2`}
                                    style={{ clipPath: 'polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px)' }}>
-                                <Target className="w-4 h-4 text-white" />
+                                <Trophy className="w-4 h-4 text-white" />
                                 <span className="text-white font-bebas text-lg tracking-wider">
-                                  {player.stars} KILLS
+                                  {player.stars} STARS
                                 </span>
                               </div>
                             </div>
@@ -338,31 +219,31 @@ export default function Rankings() {
                 </div>
               )}
 
-              {/* Rankings Table - Killer Design */}
+              {/* Rankings Table - Black & Yellow */}
               <div className="max-w-7xl mx-auto">
                 <div className="text-center mb-10">
                   <div className="inline-flex items-center gap-3">
-                    <div className="h-px w-20 bg-gradient-to-r from-transparent to-red-600" />
-                    <h3 className="text-3xl font-bebas text-zinc-300 uppercase tracking-widest">
-                      REMAINING HUNTERS
+                    <div className="h-px w-20 bg-gradient-to-r from-transparent to-yellow-500" />
+                    <h3 className="text-3xl font-bebas text-yellow-500 uppercase tracking-widest">
+                      OTHER SULTANS
                     </h3>
-                    <div className="h-px w-20 bg-gradient-to-l from-transparent to-red-600" />
+                    <div className="h-px w-20 bg-gradient-to-l from-transparent to-yellow-500" />
                   </div>
                 </div>
                 
-                <div className="bg-zinc-900/50 border border-zinc-800 overflow-hidden backdrop-blur-sm">
+                <div className="bg-zinc-900/50 border border-yellow-500/20 overflow-hidden backdrop-blur-sm">
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead>
-                        <tr className="border-b border-red-900/50 bg-black/80">
-                          <th className="py-4 px-6 text-left font-bebas text-lg text-zinc-400 uppercase tracking-widest">
+                        <tr className="border-b border-yellow-500/30 bg-black/80">
+                          <th className="py-4 px-6 text-left font-bebas text-lg text-yellow-500 uppercase tracking-widest">
                             Rank
                           </th>
-                          <th className="py-4 px-6 text-left font-bebas text-lg text-zinc-400 uppercase tracking-widest">
+                          <th className="py-4 px-6 text-left font-bebas text-lg text-yellow-500 uppercase tracking-widest">
                             Player
                           </th>
-                          <th className="py-4 px-6 text-left font-bebas text-lg text-zinc-400 uppercase tracking-widest">
-                            Kills
+                          <th className="py-4 px-6 text-left font-bebas text-lg text-yellow-500 uppercase tracking-widest">
+                            Stars
                           </th>
                         </tr>
                       </thead>
@@ -374,14 +255,14 @@ export default function Rankings() {
                           return (
                             <tr
                               key={player.id}
-                              className="border-b border-zinc-800 hover:bg-red-950/20 transition-all duration-300 group relative"
+                              className="border-b border-zinc-800 hover:bg-yellow-500/10 transition-all duration-300 group relative"
                               data-testid={`row-rank-${player.rank}`}
                             >
                               <td className="py-5 px-6 relative">
                                 <div className="flex items-center gap-3">
                                   <div className="w-10 h-10 bg-zinc-800 flex items-center justify-center"
                                        style={{ clipPath: 'polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)' }}>
-                                    <span className="text-xl font-bold font-bebas text-zinc-400 group-hover:text-red-500 transition-colors">
+                                    <span className="text-xl font-bold font-bebas text-zinc-400 group-hover:text-yellow-500 transition-colors">
                                       {player.rank}
                                     </span>
                                   </div>
@@ -390,7 +271,7 @@ export default function Rankings() {
                               <td className="py-5 px-6 relative">
                                 <div className="flex items-center gap-4">
                                   <div className="relative">
-                                    <Avatar className="w-12 h-12 ring-2 ring-zinc-700 group-hover:ring-red-600 transition-all">
+                                    <Avatar className="w-12 h-12 ring-2 ring-zinc-700 group-hover:ring-yellow-500 transition-all">
                                       <AvatarImage src={player.user?.avatar || undefined} />
                                       <AvatarFallback className="bg-zinc-800 text-zinc-400 font-bold text-lg">
                                         {player.playerName.charAt(0).toUpperCase()}
@@ -407,20 +288,20 @@ export default function Rankings() {
                                 <div className="flex items-center gap-4">
                                   <div className="flex gap-1">
                                     {Array.from({ length: Math.min(player.stars, 5) }).map((_, i) => (
-                                      <Skull
+                                      <Star
                                         key={i}
-                                        className="w-5 h-5 fill-red-600 text-red-600 opacity-80"
+                                        className="w-5 h-5 fill-yellow-500 text-yellow-500"
                                       />
                                     ))}
                                     {player.stars > 5 && (
-                                      <span className="text-red-500 font-bold text-sm font-bebas ml-1">
+                                      <span className="text-yellow-500 font-bold text-sm font-bebas ml-1">
                                         +{player.stars - 5}
                                       </span>
                                     )}
                                   </div>
-                                  <div className="bg-zinc-800 px-4 py-1 group-hover:bg-red-950 transition-colors"
+                                  <div className="bg-zinc-800 px-4 py-1 group-hover:bg-yellow-950 transition-colors"
                                        style={{ clipPath: 'polygon(4px 0, calc(100% - 4px) 0, 100% 4px, 100% calc(100% - 4px), calc(100% - 4px) 100%, 4px 100%, 0 calc(100% - 4px), 0 4px)' }}>
-                                    <span className="text-zinc-300 font-bebas text-lg group-hover:text-red-400 transition-colors">
+                                    <span className="text-zinc-300 font-bebas text-lg group-hover:text-yellow-400 transition-colors">
                                       {player.stars}
                                     </span>
                                   </div>
