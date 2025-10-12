@@ -178,18 +178,18 @@ export default function Rankings() {
                             </div>
 
                             {/* Info Section - 30% */}
-                            <div className="relative h-[30%] bg-black/95 p-4 flex flex-col justify-center gap-2">
-                              <h3 className="text-2xl font-bebas text-white uppercase tracking-widest text-center truncate" 
+                            <div className="relative h-[30%] bg-black/95 p-4 flex flex-col justify-center gap-3">
+                              <h3 className="text-2xl font-bebas text-white uppercase tracking-widest text-center truncate px-2" 
                                  data-testid={`player-name-${player.rank}`}
                                  style={{ textShadow: style.textGlow }}>
                                 {player.playerName}
                               </h3>
 
-                              {/* Stars Display */}
-                              <div className="flex items-center justify-center gap-3">
+                              {/* Crowns Display */}
+                              <div className="flex items-center justify-center gap-2">
                                 <div className="flex gap-1">
                                   {Array.from({ length: Math.min(player.stars, 5) }).map((_, i) => (
-                                    <Star key={i} className="w-5 h-5 fill-yellow-500 text-yellow-500" />
+                                    <Crown key={i} className="w-5 h-5 fill-yellow-500 text-yellow-500" />
                                   ))}
                                 </div>
                                 {player.stars > 5 && (
@@ -201,9 +201,9 @@ export default function Rankings() {
 
                               <div className={`${style.accent} px-4 py-2 flex items-center justify-center gap-2`}
                                    style={{ clipPath: 'polygon(8px 0, calc(100% - 8px) 0, 100% 8px, 100% calc(100% - 8px), calc(100% - 8px) 100%, 8px 100%, 0 calc(100% - 8px), 0 8px)' }}>
-                                <Trophy className="w-4 h-4 text-white" />
+                                <Crown className="w-4 h-4 text-white" />
                                 <span className="text-white font-bebas text-lg tracking-wider">
-                                  {player.stars} STARS
+                                  {player.stars} CROWNS
                                 </span>
                               </div>
                             </div>
@@ -243,7 +243,7 @@ export default function Rankings() {
                             Player
                           </th>
                           <th className="py-4 px-6 text-left font-bebas text-lg text-yellow-500 uppercase tracking-widest">
-                            Stars
+                            Crowns
                           </th>
                         </tr>
                       </thead>
@@ -288,7 +288,7 @@ export default function Rankings() {
                                 <div className="flex items-center gap-4">
                                   <div className="flex gap-1">
                                     {Array.from({ length: Math.min(player.stars, 5) }).map((_, i) => (
-                                      <Star
+                                      <Crown
                                         key={i}
                                         className="w-5 h-5 fill-yellow-500 text-yellow-500"
                                       />
