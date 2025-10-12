@@ -60,7 +60,7 @@ export default function AdminHero() {
     resolver: zodResolver(heroSchema),
     defaultValues: {
       backgroundImage: "",
-      videoThumbnail: "",
+      videoThumbnail: undefined,
       isActive: true,
     },
   });
@@ -156,7 +156,7 @@ export default function AdminHero() {
     setEditingSetting(setting);
     form.reset({
       backgroundImage: setting.backgroundImage,
-      videoThumbnail: setting.videoThumbnail || "",
+      videoThumbnail: setting.videoThumbnail || undefined,
       isActive: setting.isActive,
     });
     setIsDialogOpen(true);

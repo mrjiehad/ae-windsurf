@@ -68,31 +68,31 @@ export default function Rankings() {
         </div>
 
         <div className="container mx-auto px-4 py-20 relative z-10">
-          {/* Title */}
-          <div className="text-center mb-20">
+          {/* Title - Smaller Size */}
+          <div className="text-center mb-12">
             <div className="relative inline-block">
-              {/* Animated Trophy */}
-              <div className="relative mb-6">
-                <Trophy className="w-24 h-24 text-neon-yellow mx-auto animate-pulse" 
-                       style={{ filter: "drop-shadow(0 0 30px rgba(255, 215, 0, 0.8))" }} />
-                <Sparkles className="w-8 h-8 text-neon-yellow absolute -top-2 -right-2 animate-spin" 
+              {/* Animated Trophy - Smaller */}
+              <div className="relative mb-4">
+                <Trophy className="w-16 h-16 text-neon-yellow mx-auto animate-pulse" 
+                       style={{ filter: "drop-shadow(0 0 20px rgba(255, 215, 0, 0.8))" }} />
+                <Sparkles className="w-6 h-6 text-neon-yellow absolute -top-1 -right-1 animate-spin" 
                          style={{ animationDuration: "3s" }} />
-                <Sparkles className="w-6 h-6 text-neon-yellow absolute -bottom-2 -left-2 animate-ping" />
+                <Sparkles className="w-4 h-4 text-neon-yellow absolute -bottom-1 -left-1 animate-ping" />
               </div>
               
-              {/* Dynamic Month Title */}
-              <h1 className="text-6xl md:text-8xl font-russo text-white mb-2 uppercase" 
-                  style={{ textShadow: "3px 3px 0px rgba(0,0,0,0.8), 0 0 40px rgba(255, 215, 0, 0.4)" }}
+              {/* Dynamic Month Title - Smaller */}
+              <h1 className="text-3xl md:text-4xl font-russo text-white mb-1 uppercase" 
+                  style={{ textShadow: "2px 2px 0px rgba(0,0,0,0.8), 0 0 20px rgba(255, 215, 0, 0.4)" }}
                   data-testid="title-rankings">
                 SULTAN OF
               </h1>
-              <h2 className="text-7xl md:text-9xl font-bebas text-neon-yellow mb-4" 
-                  style={{ textShadow: "0 0 40px rgba(255, 215, 0, 0.6)" }}>
+              <h2 className="text-4xl md:text-5xl font-bebas text-neon-yellow mb-3" 
+                  style={{ textShadow: "0 0 30px rgba(255, 215, 0, 0.6)" }}>
                 {currentMonth}
               </h2>
-              <div className="h-1 w-64 mx-auto bg-gradient-to-r from-transparent via-neon-yellow to-transparent" />
+              <div className="h-0.5 w-48 mx-auto bg-gradient-to-r from-transparent via-neon-yellow to-transparent" />
             </div>
-            <p className="text-gray-300 font-russo text-xl uppercase tracking-widest mt-6">
+            <p className="text-gray-300 font-russo text-sm uppercase tracking-widest mt-4">
               🏆 HALL OF LEGENDS 🏆
             </p>
           </div>
@@ -108,14 +108,15 @@ export default function Rankings() {
             </div>
           ) : (
             <>
-              {/* Top 3 Podium - Completely Redesigned */}
+              {/* Top 3 Podium - Smaller Cards with Proper Heights */}
               {top3.length > 0 && (
-                <div className="mb-24">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-7xl mx-auto items-end">
+                <div className="mb-16">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-5xl mx-auto items-end">
                     {top3.map((player, index) => {
                       const orderClass = getPodiumOrder(player.rank);
                       const isWinner = player.rank === 1;
-                      const heightClass = player.rank === 1 ? 'min-h-[550px]' : player.rank === 2 ? 'min-h-[480px]' : 'min-h-[450px]';
+                      // Podium heights: #1 tallest, #2 medium, #3 shortest
+                      const heightClass = player.rank === 1 ? 'h-[420px]' : player.rank === 2 ? 'h-[380px]' : 'h-[340px]';
                       // Use uploaded image if available, otherwise use default
                       const characterImage = player.imageUrl || characterImages[index % characterImages.length];
                       
@@ -133,10 +134,10 @@ export default function Rankings() {
                           className={`${orderClass} relative group`}
                           data-testid={`podium-${player.rank}`}
                         >
-                          {/* Main Card */}
-                          <div className={`relative ${heightClass} bg-gradient-to-br ${colors.bg} border-4 ${colors.border} rounded-2xl overflow-hidden transition-all duration-500 hover:scale-105 hover:shadow-2xl`}
+                          {/* Main Card - Fixed Height */}
+                          <div className={`relative ${heightClass} bg-gradient-to-br ${colors.bg} border-3 ${colors.border} rounded-xl overflow-hidden transition-all duration-500 hover:scale-105 hover:shadow-2xl`}
                           style={{ 
-                            boxShadow: `0 0 40px ${colors.glow}, 0 20px 60px rgba(0, 0, 0, 0.8)` 
+                            boxShadow: `0 0 30px ${colors.glow}, 0 15px 40px rgba(0, 0, 0, 0.8)` 
                           }}>
                             
                             {/* Top Section - Image Display (60% height) */}
@@ -150,66 +151,66 @@ export default function Rankings() {
                               {/* Subtle gradient overlay only at bottom */}
                               <div className="absolute inset-0 bg-gradient-to-t from-black via-transparent to-transparent" />
                               
-                              {/* Rank Badge - Top Left */}
-                              <div className="absolute top-4 left-4 z-10">
-                                <div className={`${colors.accent} px-6 py-3 rounded-xl shadow-2xl border-2 border-black/50`}>
-                                  <span className="text-4xl font-bold font-bebas">#{player.rank}</span>
+                              {/* Rank Badge - Top Left - Smaller */}
+                              <div className="absolute top-3 left-3 z-10">
+                                <div className={`${colors.accent} px-4 py-2 rounded-lg shadow-2xl border-2 border-black/50`}>
+                                  <span className="text-2xl font-bold font-bebas">#{player.rank}</span>
                                 </div>
                               </div>
 
-                              {/* Winner Crown - Floating */}
+                              {/* Winner Crown - Floating - Smaller */}
                               {isWinner && (
-                                <div className="absolute top-4 right-4 z-10">
-                                  <Crown className="w-16 h-16 fill-neon-yellow text-neon-yellow animate-bounce" 
-                                         style={{ filter: "drop-shadow(0 0 30px rgba(255, 215, 0, 1))" }} />
+                                <div className="absolute top-3 right-3 z-10">
+                                  <Crown className="w-10 h-10 fill-neon-yellow text-neon-yellow animate-bounce" 
+                                         style={{ filter: "drop-shadow(0 0 20px rgba(255, 215, 0, 1))" }} />
                                 </div>
                               )}
                             </div>
 
                             {/* Bottom Section - Player Info (40% height) */}
-                            <div className="relative h-[40%] bg-black/95 p-6 flex flex-col justify-between">
-                              {/* Player Name */}
+                            <div className="relative h-[40%] bg-black/95 p-4 flex flex-col justify-between">
+                              {/* Player Name - Smaller */}
                               <div className="text-center">
-                                <h3 className={`${isWinner ? 'text-4xl' : 'text-3xl'} font-russo text-white tracking-wider mb-2 uppercase`} 
+                                <h3 className={`${isWinner ? 'text-2xl' : 'text-xl'} font-russo text-white tracking-wider mb-1.5 uppercase`} 
                                    data-testid={`player-name-${player.rank}`}
-                                   style={{ textShadow: `0 0 20px ${colors.glow}` }}>
+                                   style={{ textShadow: `0 0 15px ${colors.glow}` }}>
                                   {player.playerName}
                                 </h3>
-                                <div className={`inline-flex items-center gap-2 ${colors.accent} px-4 py-1.5 rounded-full`}>
-                                  <Trophy className="w-4 h-4" />
+                                <div className={`inline-flex items-center gap-1.5 ${colors.accent} px-3 py-1 rounded-full`}>
+                                  <Trophy className="w-3 h-3" />
                                   <span className="font-russo font-bold text-xs uppercase tracking-wider">
                                     {isWinner ? 'CHAMPION' : player.rank === 2 ? 'RUNNER-UP' : 'THIRD PLACE'}
                                   </span>
                                 </div>
                               </div>
 
-                              {/* Stars Display */}
-                              <div className="space-y-2">
-                                <div className="flex gap-1 flex-wrap justify-center">
+                              {/* Stars Display - Smaller */}
+                              <div className="space-y-1.5">
+                                <div className="flex gap-0.5 flex-wrap justify-center">
                                   {Array.from({ length: Math.min(player.stars, 5) }).map((_, i) => (
                                     <Star
                                       key={i}
-                                      className={`w-6 h-6 fill-neon-yellow text-neon-yellow`}
-                                      style={{ filter: "drop-shadow(0 0 6px rgba(255, 215, 0, 0.8))" }}
+                                      className="w-4 h-4 fill-neon-yellow text-neon-yellow"
+                                      style={{ filter: "drop-shadow(0 0 4px rgba(255, 215, 0, 0.8))" }}
                                     />
                                   ))}
                                   {player.stars > 5 && (
-                                    <span className="text-neon-yellow font-bold text-lg font-bebas ml-1">
+                                    <span className="text-neon-yellow font-bold text-sm font-bebas ml-1">
                                       +{player.stars - 5}
                                     </span>
                                   )}
                                 </div>
-                                <div className={`text-center ${colors.accent} py-2 rounded-lg`}>
-                                  <span className={`font-bebas text-2xl font-bold`}>
+                                <div className={`text-center ${colors.accent} py-1.5 rounded-lg`}>
+                                  <span className="font-bebas text-lg font-bold">
                                     {player.stars} STARS
                                   </span>
                                 </div>
                               </div>
                             </div>
 
-                            {/* Decorative Corner Accents */}
-                            <div className={`absolute top-0 right-0 w-32 h-32 ${colors.border} opacity-10 rounded-bl-full`} />
-                            <div className={`absolute bottom-0 left-0 w-32 h-32 ${colors.border} opacity-10 rounded-tr-full`} />
+                            {/* Decorative Corner Accents - Smaller */}
+                            <div className={`absolute top-0 right-0 w-20 h-20 ${colors.border} opacity-10 rounded-bl-full`} />
+                            <div className={`absolute bottom-0 left-0 w-20 h-20 ${colors.border} opacity-10 rounded-tr-full`} />
                           </div>
                         </div>
                       );
