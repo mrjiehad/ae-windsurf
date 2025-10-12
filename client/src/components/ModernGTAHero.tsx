@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Play, Sparkles, TrendingUp, Zap } from "lucide-react";
 import { motion } from "framer-motion";
@@ -46,6 +47,13 @@ function CyclingTypingText({ phrases, speed = 80, pauseDuration = 2000 }: { phra
 import gta1 from "@assets/gta1_1759551121573.png";
 import trailerThumb from "@assets/hqdefault_1759551446234.jpg";
 
+interface HeroSetting {
+  id: string;
+  backgroundImage: string;
+  videoThumbnail: string | null;
+  isActive: boolean;
+}
+
 interface ModernGTAHeroProps {
   onShopClick?: () => void;
   onPackagesClick?: () => void;
@@ -60,6 +68,15 @@ export function ModernGTAHero({ onShopClick, onPackagesClick, onRankingsClick }:
     "INSTANT DELIVERY"
   ];
 
+  // Fetch hero settings from API
+  const { data: heroSetting } = useQuery<HeroSetting>({
+    queryKey: ["/api/hero"],
+  });
+
+  // Use database image if available, otherwise fallback to default
+  const backgroundImage = heroSetting?.backgroundImage || gta1;
+  const videoThumbnail = heroSetting?.videoThumbnail || trailerThumb;
+
   return (
     <section className="relative min-h-screen bg-black overflow-hidden flex items-center pt-16">
       {/* Animated Background with Parallax Effect */}
@@ -69,7 +86,7 @@ export function ModernGTAHero({ onShopClick, onPackagesClick, onRankingsClick }:
         transition={{ duration: 1.5, ease: "easeOut" }}
         className="absolute inset-0 bg-cover bg-center"
         style={{ 
-          backgroundImage: `url(${gta1})`,
+          backgroundImage: `url(${backgroundImage})`,
           backgroundPosition: 'center center',
         }}
       >
@@ -225,7 +242,7 @@ export function ModernGTAHero({ onShopClick, onPackagesClick, onRankingsClick }:
                 data-testid="link-release-trailer"
               >
                 <img 
-                  src={trailerThumb} 
+                  src={videoThumbnail} 
                   alt="Video Thumbnail"
                   className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 />
