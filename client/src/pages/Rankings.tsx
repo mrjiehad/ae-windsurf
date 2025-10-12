@@ -1,9 +1,10 @@
 import { useQuery } from "@tanstack/react-query";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { Crown, Trophy, Award, Sparkles } from "lucide-react";
+import { Crown, Trophy, Award, Sparkles, Zap } from "lucide-react";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import type { PlayerRanking } from "@shared/schema";
+import { useState, useEffect } from "react";
 
 import sultan1 from "@assets/S2_1759294544784.png";
 import sultan2 from "@assets/S1_1759294544782.png";
@@ -28,12 +29,60 @@ const getCurrentMonth = () => {
   return months[new Date().getMonth()];
 };
 
+// Lightning Effect Component
+function LightningBolt({ delay = 0 }: { delay?: number }) {
+  const [isVisible, setIsVisible] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+
+  useEffect(() => {
+    const triggerLightning = () => {
+      // Random position
+      setPosition({
+        x: Math.random() * 100,
+        y: Math.random() * 50,
+      });
+      
+      setIsVisible(true);
+      setTimeout(() => setIsVisible(false), 200);
+      
+      // Random next strike between 3-8 seconds
+      const nextStrike = 3000 + Math.random() * 5000;
+      setTimeout(triggerLightning, nextStrike);
+    };
+
+    const initialDelay = setTimeout(triggerLightning, delay);
+    return () => clearTimeout(initialDelay);
+  }, [delay]);
+
+  if (!isVisible) return null;
+
+  return (
+    <div
+      className="absolute pointer-events-none z-20"
+      style={{
+        left: `${position.x}%`,
+        top: `${position.y}%`,
+      }}
+    >
+      <Zap
+        className="text-yellow-400 animate-pulse"
+        style={{
+          width: '60px',
+          height: '60px',
+          filter: 'drop-shadow(0 0 20px rgba(250, 204, 21, 0.9)) drop-shadow(0 0 40px rgba(250, 204, 21, 0.6))',
+          animation: 'lightning 0.2s ease-in-out',
+        }}
+      />
+    </div>
+  );
+}
+
 export default function Rankings() {
   const { data: rankings = [], isLoading } = useQuery<PlayerRankingWithUser[]>({
     queryKey: ["/api/rankings"],
   });
 
-  const currentMonth = getCurrentMonth();
+  const currentMonth = new Date().toLocaleString('default', { month: 'long' }).toUpperCase();
   const top3 = rankings.slice(0, 3);
   const restOfRankings = rankings.slice(3);
 
@@ -55,9 +104,9 @@ export default function Rankings() {
     <div className="min-h-screen bg-[#000000]">
       <Header cartItemCount={0} onCartClick={() => {}} />
       
-      {/* Hero Section with Background */}
-      <div className="relative overflow-hidden">
-        {/* Background Image */}
+      {/* Background with City Image */}
+      <div className="relative min-h-screen bg-[#000000] overflow-hidden">
+        {/* Background Image Layer */}
         <div className="absolute inset-0 z-0">
           <img 
             src={cityBg} 
@@ -66,6 +115,12 @@ export default function Rankings() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#000000]/80 via-[#000000]/90 to-[#000000]" />
         </div>
+
+        {/* Lightning Effects - Multiple bolts with different delays */}
+        <LightningBolt delay={0} />
+        <LightningBolt delay={1500} />
+        <LightningBolt delay={3000} />
+        <LightningBolt delay={4500} />
 
         <div className="container mx-auto px-4 py-20 relative z-10">
           {/* Title - Smaller Size */}
