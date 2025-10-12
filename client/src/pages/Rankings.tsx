@@ -168,40 +168,40 @@ export default function Rankings() {
                             </div>
 
                             {/* Bottom Section - Player Info (40% height) */}
-                            <div className="relative h-[40%] bg-black/95 p-4 flex flex-col justify-between">
+                            <div className="relative h-[40%] bg-black/95 p-3 flex flex-col justify-center gap-2">
                               {/* Player Name - Smaller */}
                               <div className="text-center">
-                                <h3 className={`${isWinner ? 'text-2xl' : 'text-xl'} font-russo text-white tracking-wider mb-1.5 uppercase`} 
+                                <h3 className={`${isWinner ? 'text-xl' : 'text-lg'} font-russo text-white tracking-wider mb-1 uppercase truncate px-2`} 
                                    data-testid={`player-name-${player.rank}`}
                                    style={{ textShadow: `0 0 15px ${colors.glow}` }}>
                                   {player.playerName}
                                 </h3>
-                                <div className={`inline-flex items-center gap-1.5 ${colors.accent} px-3 py-1 rounded-full`}>
+                                <div className={`inline-flex items-center gap-1 ${colors.accent} px-2 py-0.5 rounded-full text-xs`}>
                                   <Trophy className="w-3 h-3" />
-                                  <span className="font-russo font-bold text-xs uppercase tracking-wider">
-                                    {isWinner ? 'CHAMPION' : player.rank === 2 ? 'RUNNER-UP' : 'THIRD PLACE'}
+                                  <span className="font-russo font-bold uppercase tracking-wider">
+                                    {isWinner ? 'CHAMPION' : player.rank === 2 ? 'RUNNER-UP' : '3RD PLACE'}
                                   </span>
                                 </div>
                               </div>
 
-                              {/* Stars Display - Smaller */}
-                              <div className="space-y-1.5">
-                                <div className="flex gap-0.5 flex-wrap justify-center">
+                              {/* Stars Display - Compact */}
+                              <div className="space-y-1">
+                                <div className="flex gap-0.5 justify-center items-center">
                                   {Array.from({ length: Math.min(player.stars, 5) }).map((_, i) => (
                                     <Star
                                       key={i}
-                                      className="w-4 h-4 fill-neon-yellow text-neon-yellow"
-                                      style={{ filter: "drop-shadow(0 0 4px rgba(255, 215, 0, 0.8))" }}
+                                      className="w-3.5 h-3.5 fill-neon-yellow text-neon-yellow"
+                                      style={{ filter: "drop-shadow(0 0 3px rgba(255, 215, 0, 0.8))" }}
                                     />
                                   ))}
                                   {player.stars > 5 && (
-                                    <span className="text-neon-yellow font-bold text-sm font-bebas ml-1">
+                                    <span className="text-neon-yellow font-bold text-xs font-bebas ml-1">
                                       +{player.stars - 5}
                                     </span>
                                   )}
                                 </div>
-                                <div className={`text-center ${colors.accent} py-1.5 rounded-lg`}>
-                                  <span className="font-bebas text-lg font-bold">
+                                <div className={`text-center ${colors.accent} py-1 rounded`}>
+                                  <span className="font-bebas text-base font-bold">
                                     {player.stars} STARS
                                   </span>
                                 </div>
