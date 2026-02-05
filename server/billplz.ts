@@ -12,10 +12,10 @@ interface CreateCollectionResponse {
 interface CreateBillResponse {
   id: string;
   collection_id: string;
-  paid: boolean;
   state: string;
   amount: number;
   paid_amount: number;
+  paid: boolean;
   due_at: string;
   email: string;
   mobile: string | null;
@@ -33,16 +33,17 @@ interface CreateBillResponse {
 interface GetBillResponse {
   id: string;
   collection_id: string;
-  paid: boolean;
   state: string;
   amount: number;
   paid_amount: number;
+  paid_at: string | null;
+  paid: boolean;
   due_at: string;
   email: string;
   mobile: string | null;
   name: string;
   url: string;
-  paid_at: string | null;
+
 }
 
 let collectionId: string | null = null;
