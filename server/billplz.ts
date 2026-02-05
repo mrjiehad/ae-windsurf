@@ -1,6 +1,11 @@
 import crypto from 'crypto';
+import { Request, Response } from 'express';
 
 const BILLPLZ_BASE_URL = 'https://www.billplz.com/api';
+
+/* -------------------------------------------------------------------------- */
+/*                                   TYPES                                    */
+/* -------------------------------------------------------------------------- */
 
 interface CreateCollectionResponse {
   id: string;
@@ -45,58 +50,71 @@ interface GetBillResponse {
   url: string;
 }
 
+interface BillplzCallbackPayload {
+  id: string;
+  paid: 'true' | 'false';
+  state: string;
+  amount: string;
+  paid_amount: string;
+  x_signature: string;
+  [key: string]: string;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                              COLLECTION CACHE                               */
+/* -------------------------------------------------------------------------- */
 
 let collectionId: string | null = null;
 
+/* -------------------------------------------------------------------------- */
+/*                           COLLECTION CREATION                               */
+/* -------------------------------------------------------------------------- */
+
 async function ensureCollectionExists(): Promise<string> {
-  if (collectionId) {
-    return collectionId;
-  }
+  if (collectionId) return collectionId;
 
   if (!process.env.BILLPLZ_SECRET_KEY) {
     throw new Error('BILLPLZ_SECRET_KEY not configured');
   }
 
-  try {
-    // Create collection for AECOIN Store
-    const response = await fetch(`${BILLPLZ_BASE_URL}/v3/collections`, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Basic ' + Buffer.from(process.env.BILLPLZ_SECRET_KEY + ':').toString('base64'),
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        title: 'AECOIN Store',
-        description: 'GTA Online virtual currency packages',
-      }),
-    });
+  const response = await fetch(`${BILLPLZ_BASE_URL}/v3/collections`, {
+    method: 'POST',
+    headers: {
+      Authorization:
+        'Basic ' +
+        Buffer.from(process.env.BILLPLZ_SECRET_KEY + ':').toString('base64'),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      title: 'AECOIN Store',
+      description: 'GTA Online virtual currency packages',
+    }),
+  });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Billplz collection creation failed:', errorText);
-      throw new Error(`Failed to create Billplz collection: ${errorText}`);
-    }
-
-    const data = await response.json() as CreateCollectionResponse;
-    
-    if (!data.id) {
-      console.error('Invalid collection response:', data);
-      throw new Error('Failed to create Billplz collection: No ID returned');
-    }
-
-    collectionId = data.id;
-    console.log('✓ Billplz collection created:', collectionId);
-    
-    return collectionId;
-  } catch (error) {
-    console.error('Billplz collection creation error:', error);
-    throw error;
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to create Billplz collection: ${errorText}`);
   }
+
+  const data = (await response.json()) as CreateCollectionResponse;
+
+  if (!data.id) {
+    throw new Error('Invalid Billplz collection response');
+  }
+
+  collectionId = data.id;
+  console.log('✓ Billplz collection created:', collectionId);
+
+  return collectionId;
 }
+
+/* -------------------------------------------------------------------------- */
+/*                                CREATE BILL                                  */
+/* -------------------------------------------------------------------------- */
 
 export async function createBill(params: {
   description: string;
-  amount: number; // in MYR (will be converted to cents)
+  amount: number; // MYR
   name: string;
   email: string;
   mobile?: string;
@@ -110,118 +128,135 @@ export async function createBill(params: {
   }
 
   const collId = await ensureCollectionExists();
+  const amountInCents = Math.round(params.amount * 100);
 
-  try {
-    // Convert amount to cents (Billplz expects amount in cents)
-    const amountInCents = Math.round(params.amount * 100);
+  const billData: Record<string, any> = {
+    collection_id: collId,
+    description: params.description,
+    email: params.email,
+    name: params.name,
+    amount: amountInCents,
+    callback_url: params.callbackUrl,
+    redirect_url: params.redirectUrl,
+  };
 
-    const billData: any = {
-      collection_id: collId,
-      description: params.description,
-      email: params.email,
-      name: params.name,
-      amount: amountInCents,
-      callback_url: params.callbackUrl,
-      redirect_url: params.redirectUrl,
-    };
-
-    if (params.mobile) {
-      billData.mobile = params.mobile;
-    }
-
-    if (params.reference1Label && params.reference1) {
-      billData.reference_1_label = params.reference1Label;
-      billData.reference_1 = params.reference1;
-    }
-
-    const response = await fetch(`${BILLPLZ_BASE_URL}/v3/bills`, {
-      method: 'POST',
-      headers: {
-        'Authorization': 'Basic ' + Buffer.from(process.env.BILLPLZ_SECRET_KEY + ':').toString('base64'),
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(billData),
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Billplz bill creation failed:', errorText);
-      throw new Error(`Failed to create Billplz bill: ${errorText}`);
-    }
-
-    const data = await response.json() as CreateBillResponse;
-    
-    if (!data.id || !data.url) {
-      console.error('Invalid bill response:', data);
-      throw new Error('Failed to create Billplz bill: Invalid response');
-    }
-
-    console.log('✓ Billplz bill created:', data.id);
-    return data;
-  } catch (error) {
-    console.error('Billplz bill creation error:', error);
-    throw error;
+  if (params.mobile) billData.mobile = params.mobile;
+  if (params.reference1Label && params.reference1) {
+    billData.reference_1_label = params.reference1Label;
+    billData.reference_1 = params.reference1;
   }
+
+  const response = await fetch(`${BILLPLZ_BASE_URL}/v3/bills`, {
+    method: 'POST',
+    headers: {
+      Authorization:
+        'Basic ' +
+        Buffer.from(process.env.BILLPLZ_SECRET_KEY + ':').toString('base64'),
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(billData),
+  });
+
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to create Billplz bill: ${errorText}`);
+  }
+
+  return (await response.json()) as CreateBillResponse;
 }
+
+/* -------------------------------------------------------------------------- */
+/*                                 GET BILL                                   */
+/* -------------------------------------------------------------------------- */
 
 export async function getBill(billId: string): Promise<GetBillResponse> {
   if (!process.env.BILLPLZ_SECRET_KEY) {
     throw new Error('BILLPLZ_SECRET_KEY not configured');
   }
 
-  try {
-    const response = await fetch(`${BILLPLZ_BASE_URL}/v3/bills/${billId}`, {
-      method: 'GET',
-      headers: {
-        'Authorization': 'Basic ' + Buffer.from(process.env.BILLPLZ_SECRET_KEY + ':').toString('base64'),
-      },
-    });
+  const response = await fetch(`${BILLPLZ_BASE_URL}/v3/bills/${billId}`, {
+    method: 'GET',
+    headers: {
+      Authorization:
+        'Basic ' +
+        Buffer.from(process.env.BILLPLZ_SECRET_KEY + ':').toString('base64'),
+    },
+  });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('Billplz get bill failed:', errorText);
-      throw new Error(`Failed to get Billplz bill: ${errorText}`);
-    }
-
-    const data = await response.json() as GetBillResponse;
-    return data;
-  } catch (error) {
-    console.error('Billplz get bill error:', error);
-    throw error;
+  if (!response.ok) {
+    const errorText = await response.text();
+    throw new Error(`Failed to get Billplz bill: ${errorText}`);
   }
+
+  return (await response.json()) as GetBillResponse;
 }
+
+/* -------------------------------------------------------------------------- */
+/*                           VERIFY PAYMENT (PULL)                             */
+/* -------------------------------------------------------------------------- */
 
 export async function verifyBillPayment(billId: string): Promise<boolean> {
-  try {
-    const bill = await getBill(billId);
-    return bill.paid === true && bill.state === 'paid';
-  } catch (error) {
-    console.error('Billplz payment verification error:', error);
-    return false;
-  }
+  const bill = await getBill(billId);
+  return bill.paid === true && bill.state === 'paid';
 }
 
-/**
- * Verify Billplz X-Signature callback authenticity
- * @param payload - The callback payload (as string)
- * @param signature - The X-Billplz-Signature header value
- * @returns true if signature is valid
- */
-export function verifyBillplzSignature(payload: string, signature: string): boolean {
-  if (!process.env.BILLPLZ_SIGNATURE_KEY) {
-    console.warn('BILLPLZ_SIGNATURE_KEY not configured - skipping signature verification (DEVELOPMENT ONLY)');
-    return true; // Allow in development
+/* -------------------------------------------------------------------------- */
+/*                        CALLBACK SIGNATURE VERIFY                             */
+/* -------------------------------------------------------------------------- */
+
+function verifyBillplzCallbackSignature(
+  payload: BillplzCallbackPayload
+): boolean {
+  if (!process.env.BILLPLZ_SECRET_KEY) {
+    throw new Error('BILLPLZ_SECRET_KEY not configured');
   }
 
+  const { x_signature, ...data } = payload;
+
+  const sortedKeys = Object.keys(data).sort();
+
+  const signingString =
+    sortedKeys.map(key => `${key}=${data[key]}`).join('|') +
+    `|${process.env.BILLPLZ_SECRET_KEY}`;
+
+  const expectedSignature = crypto
+    .createHash('sha256')
+    .update(signingString)
+    .digest('hex');
+
+  return expectedSignature === x_signature;
+}
+
+/* -------------------------------------------------------------------------- */
+/*                           CALLBACK HANDLER                                  */
+/* -------------------------------------------------------------------------- */
+
+export async function billplzCallbackHandler(
+  req: Request,
+  res: Response
+): Promise<Response> {
   try {
-    const expectedSignature = crypto
-      .createHmac('sha256', process.env.BILLPLZ_SIGNATURE_KEY)
-      .update(payload)
-      .digest('hex');
-    
-    return expectedSignature === signature;
+    const payload = req.body as BillplzCallbackPayload;
+
+    if (!payload?.id || !payload?.x_signature) {
+      return res.status(400).send('Invalid callback payload');
+    }
+
+    const isValid = verifyBillplzCallbackSignature(payload);
+
+    if (!isValid) {
+      console.error('❌ Invalid Billplz callback signature', payload);
+      return res.status(403).send('Invalid signature');
+    }
+
+    if (payload.paid === 'true') {
+      // TODO: update database / mark order paid
+      console.log('✅ Payment confirmed:', payload.id);
+    }
+
+    return res.status(200).send('OK');
   } catch (error) {
-    console.error('Billplz signature verification error:', error);
-    return false;
+    console.error('Billplz callback error:', error);
+    return res.status(500).send('Internal Server Error');
   }
 }
