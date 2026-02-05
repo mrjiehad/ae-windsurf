@@ -31,20 +31,20 @@ interface CreateBillResponse {
 }
 
 interface GetBillResponse {
-  id: string;
-  collection_id: string;
-  state: string;
   amount: number;
-  paid_amount: number;
-  paid_at: string | null;
-  paid: boolean;
+  collection_id: string;
   due_at: string;
   email: string;
+  id: string;
   mobile: string | null;
   name: string;
+  paid: boolean;
+  paid_amount: number;
+  paid_at: string | null;
+  state: string;
   url: string;
-
 }
+
 
 let collectionId: string | null = null;
 
