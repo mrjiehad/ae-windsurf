@@ -202,26 +202,116 @@ export async function verifyBillPayment(billId: string): Promise<boolean> {
 }
 
 /**
- * Verify Billplz X-Signature callback authenticity
- * @param payload - The callback payload (as string)
- * @param signature - The X-Billplz-Signature header value
+ * Construct the Billplz X-Signature source string from key-value pairs.
+ * Per Billplz API docs:
+ * 1. Extract all key-value pairs except x_signature
+ * 2. Construct source string as "keyvalue" for each pair (no separator between key and value)
+ * 3. Sort alphabetically (case-insensitive)
+ * 4. Join with "|" pipe character
+ */
+function constructSourceString(params: Record<string, string>): string {
+  const pairs: string[] = [];
+  
+  for (const [key, value] of Object.entries(params)) {
+    if (key === 'x_signature') continue; // Exclude x_signature itself
+    pairs.push(`${key}${value || ''}`);
+  }
+  
+  // Sort ascending, case-insensitive
+  pairs.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+  
+  return pairs.join('|');
+}
+
+/**
+ * Verify Billplz X-Signature for callback URL (POST body params).
+ * The callback sends all bill fields as URL-encoded POST body including x_signature.
+ * @param params - Parsed key-value pairs from the POST body
  * @returns true if signature is valid
  */
-export function verifyBillplzSignature(payload: string, signature: string): boolean {
+export function verifyBillplzCallbackSignature(params: Record<string, string>): boolean {
   if (!process.env.BILLPLZ_SIGNATURE_KEY) {
     console.warn('BILLPLZ_SIGNATURE_KEY not configured - skipping signature verification (DEVELOPMENT ONLY)');
-    return true; // Allow in development
+    return true;
   }
 
   try {
+    const receivedSignature = params['x_signature'];
+    if (!receivedSignature) {
+      console.error('No x_signature found in callback params');
+      return false;
+    }
+
+    const sourceString = constructSourceString(params);
+    
     const expectedSignature = crypto
       .createHmac('sha256', process.env.BILLPLZ_SIGNATURE_KEY)
-      .update(payload)
+      .update(sourceString)
       .digest('hex');
     
-    return expectedSignature === signature;
+    console.log('Billplz callback signature verification:', {
+      sourceString,
+      expectedSignature,
+      receivedSignature,
+      match: expectedSignature === receivedSignature
+    });
+    
+    return expectedSignature === receivedSignature;
   } catch (error) {
-    console.error('Billplz signature verification error:', error);
+    console.error('Billplz callback signature verification error:', error);
+    return false;
+  }
+}
+
+/**
+ * Verify Billplz X-Signature for redirect URL (GET query params).
+ * The redirect sends billplz[id], billplz[paid], billplz[paid_at], billplz[x_signature] as query params.
+ * Source string keys use "billplz" prefix: e.g. "billplzidzq0tm2wc"
+ * @param queryParams - The billplz query parameter object with id, paid, paid_at, x_signature
+ * @returns true if signature is valid
+ */
+export function verifyBillplzRedirectSignature(queryParams: Record<string, string>): boolean {
+  if (!process.env.BILLPLZ_SIGNATURE_KEY) {
+    console.warn('BILLPLZ_SIGNATURE_KEY not configured - skipping signature verification (DEVELOPMENT ONLY)');
+    return true;
+  }
+
+  try {
+    const receivedSignature = queryParams['x_signature'];
+    if (!receivedSignature) {
+      console.error('No x_signature found in redirect params');
+      return false;
+    }
+
+    // For redirect, keys are prefixed with "billplz" in the source string
+    const params: Record<string, string> = {};
+    for (const [key, value] of Object.entries(queryParams)) {
+      if (key === 'x_signature') continue;
+      params[`billplz${key}`] = value || '';
+    }
+
+    const pairs: string[] = [];
+    for (const [key, value] of Object.entries(params)) {
+      pairs.push(`${key}${value}`);
+    }
+    pairs.sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()));
+    const sourceString = pairs.join('|');
+
+    const expectedSignature = crypto
+      .createHmac('sha256', process.env.BILLPLZ_SIGNATURE_KEY)
+      .update(sourceString)
+      .digest('hex');
+
+    console.log('Billplz redirect signature verification:', {
+      sourceString,
+      expectedSignature,
+      receivedSignature,
+      match: expectedSignature === receivedSignature
+    });
+
+    return expectedSignature === receivedSignature;
+  } catch (error) {
+    console.error('Billplz redirect signature verification error:', error);
     return false;
   }
 }

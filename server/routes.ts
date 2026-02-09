@@ -9,7 +9,7 @@ import { getDiscordAuthUrl, exchangeCodeForToken, getDiscordUserInfo } from "./d
 import { sendOrderConfirmationEmail } from "./email";
 import { insertRedemptionCodeToFiveM } from "./fivem-db";
 import { createBill, getPaymentUrl, getBillTransactions } from "./toyyibpay";
-import { createBill as createBillplzBill, getBill, verifyBillPayment, verifyBillplzSignature } from "./billplz";
+import { createBill as createBillplzBill, getBill, verifyBillPayment, verifyBillplzCallbackSignature, verifyBillplzRedirectSignature } from "./billplz";
 import "./types";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
@@ -883,22 +883,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // req.body is raw text string due to express.text() middleware
       const rawBody = typeof req.body === 'string' ? req.body : '';
-      const signature = req.headers['x-signature'] as string;
 
-      // SECURITY: Verify X-Signature to ensure callback is from Billplz (uses raw body)
-      const isValidSignature = verifyBillplzSignature(rawBody, signature || '');
+      // Parse the URL-encoded body into key-value pairs
+      const params = new URLSearchParams(rawBody);
+      const paramsObj: Record<string, string> = {};
+      for (const [key, value] of params.entries()) {
+        paramsObj[key] = value;
+      }
+
+      const id = paramsObj['id'];
+      const paid = paramsObj['paid'];
+
+      console.log("Billplz callback received:", { id, paid, hasSignature: !!paramsObj['x_signature'] });
+
+      // SECURITY: Verify X-Signature using constructed source string per Billplz API docs
+      const isValidSignature = verifyBillplzCallbackSignature(paramsObj);
       
       if (!isValidSignature) {
         console.error('Invalid Billplz callback signature - possible fraud attempt');
         return res.status(200).send('OK'); // Return 200 to prevent retries
       }
-
-      // Parse the URL-encoded body manually
-      const params = new URLSearchParams(rawBody);
-      const id = params.get('id');
-      const paid = params.get('paid');
-
-      console.log("Billplz callback received:", { id, paid, hasSignature: !!signature });
 
       if (!id) {
         return res.status(200).send('OK');
@@ -937,28 +941,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Billplz return handler (user redirected here after payment) - SECURE VERSION
+  // Billplz redirects as: GET /api/billplz/return?billplz[id]=xxx&billplz[paid]=true&billplz[paid_at]=xxx&billplz[x_signature]=xxx
   app.get("/api/billplz/return", async (req, res) => {
     try {
-      const { billplz } = req.query;
+      // Express parses billplz[id], billplz[paid], etc. into req.query.billplz as an object
+      const billplz = req.query.billplz as Record<string, string> | undefined;
 
       console.log("Billplz return:", { billplz });
 
-      if (!billplz) {
+      if (!billplz || typeof billplz !== 'object') {
         return res.redirect(`/payment/failed?reason=invalid_request`);
       }
 
-      // Parse the billplz data (it comes as a JSON object)
-      let billData: any;
-      try {
-        billData = typeof billplz === 'string' ? JSON.parse(billplz) : billplz;
-      } catch (parseError) {
-        console.error("Failed to parse Billplz data:", parseError);
-        return res.redirect(`/payment/failed?reason=invalid_data`);
+      // Verify X-Signature for redirect URL
+      const isValidSignature = verifyBillplzRedirectSignature(billplz);
+      if (!isValidSignature) {
+        console.error('Invalid Billplz redirect signature - possible tampering');
+        return res.redirect(`/payment/failed?reason=invalid_signature`);
       }
 
-      const billId = billData.id;
+      const billId = billplz.id;
+      const paid = billplz.paid;
       
-      if (!billId || billData.paid !== true) {
+      if (!billId || paid !== 'true') {
         return res.redirect(`/payment/failed?reason=payment_not_completed`);
       }
 
