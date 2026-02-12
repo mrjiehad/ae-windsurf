@@ -8,7 +8,9 @@ import { AdminSidebar } from "@/components/AdminSidebar";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import type { PaymentSetting } from "@shared/schema";
 
 export default function AdminSettings() {
@@ -20,6 +22,45 @@ export default function AdminSettings() {
   const { data: settings, isLoading } = useQuery<PaymentSetting[]>({
     queryKey: ['/api/admin/payment-settings'],
   });
+
+  // Change password state
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [showCurrentPw, setShowCurrentPw] = useState(false);
+  const [showNewPw, setShowNewPw] = useState(false);
+
+  const changePasswordMutation = useMutation({
+    mutationFn: async (data: { currentPassword: string; newPassword: string }) => {
+      const res = await apiRequest("POST", "/api/admin/change-password", data);
+      return res.json();
+    },
+    onSuccess: () => {
+      toast({ title: "Success", description: "Password changed successfully" });
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    },
+    onError: (error: any) => {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: error.message || "Failed to change password",
+      });
+    },
+  });
+
+  const handleChangePassword = () => {
+    if (newPassword !== confirmPassword) {
+      toast({ variant: "destructive", title: "Error", description: "New passwords do not match" });
+      return;
+    }
+    if (newPassword.length < 6) {
+      toast({ variant: "destructive", title: "Error", description: "New password must be at least 6 characters" });
+      return;
+    }
+    changePasswordMutation.mutate({ currentPassword, newPassword });
+  };
 
   // Update payment setting mutation
   const updateSettingMutation = useMutation({
@@ -131,6 +172,78 @@ export default function AdminSettings() {
                 </div>
               </div>
             ))}
+          </CardContent>
+        </Card>
+
+        {/* Change Password */}
+        <Card className="bg-[#0A0A0A] border-[#FFEB3B]/20 mb-6">
+          <CardHeader>
+            <CardTitle className="font-bebas text-2xl text-[#FFEB3B] tracking-wide">
+              CHANGE PASSWORD
+            </CardTitle>
+            <CardDescription className="text-gray-400 font-rajdhani">
+              Update your admin login password
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="space-y-2">
+              <Label className="text-gray-300 font-rajdhani">Current Password</Label>
+              <div className="relative">
+                <Input
+                  type={showCurrentPw ? "text" : "password"}
+                  value={currentPassword}
+                  onChange={(e) => setCurrentPassword(e.target.value)}
+                  placeholder="Enter current password"
+                  className="bg-black/50 border-[#FFEB3B]/20 text-white pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowCurrentPw(!showCurrentPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  {showCurrentPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-gray-300 font-rajdhani">New Password</Label>
+              <div className="relative">
+                <Input
+                  type={showNewPw ? "text" : "password"}
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  placeholder="Enter new password (min 6 characters)"
+                  className="bg-black/50 border-[#FFEB3B]/20 text-white pr-10"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowNewPw(!showNewPw)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-white"
+                >
+                  {showNewPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+            </div>
+            <div className="space-y-2">
+              <Label className="text-gray-300 font-rajdhani">Confirm New Password</Label>
+              <Input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Confirm new password"
+                className="bg-black/50 border-[#FFEB3B]/20 text-white"
+              />
+            </div>
+            <Button
+              onClick={handleChangePassword}
+              disabled={changePasswordMutation.isPending || !currentPassword || !newPassword || !confirmPassword}
+              className="bg-[#FFEB3B] text-black hover:bg-[#FFEB3B]/80 font-rajdhani font-bold"
+            >
+              {changePasswordMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin mr-2" />
+              ) : null}
+              UPDATE PASSWORD
+            </Button>
           </CardContent>
         </Card>
 

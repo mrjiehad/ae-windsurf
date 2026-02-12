@@ -1091,6 +1091,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // ADMIN ROUTES - Protected by requireAdmin middleware
   // ============================================
 
+  // Admin: Change password
+  app.post("/api/admin/change-password", requireAdmin, async (req, res) => {
+    try {
+      const schema = z.object({
+        currentPassword: z.string().min(1, "Current password is required"),
+        newPassword: z.string().min(6, "New password must be at least 6 characters"),
+      });
+      const { currentPassword, newPassword } = schema.parse(req.body);
+
+      const user = await storage.getUser(req.session.userId!);
+      if (!user || !user.passwordHash) {
+        return res.status(400).json({ message: "User not found" });
+      }
+
+      const isValid = await bcrypt.compare(currentPassword, user.passwordHash);
+      if (!isValid) {
+        return res.status(401).json({ message: "Current password is incorrect" });
+      }
+
+      const newHash = await bcrypt.hash(newPassword, 12);
+      await db.update(users).set({ passwordHash: newHash }).where(eq(users.id, user.id));
+
+      res.json({ message: "Password changed successfully" });
+    } catch (error: any) {
+      if (error.name === "ZodError") {
+        return res.status(400).json({ message: "Invalid input", errors: error.errors });
+      }
+      console.error("Change password error:", error);
+      res.status(500).json({ message: "Failed to change password" });
+    }
+  });
+
   // Admin: Get all orders with filters
   app.get("/api/admin/orders", requireAdmin, async (req, res) => {
     try {
