@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Play, Sparkles, TrendingUp, Zap } from "lucide-react";
+import { Play, Sparkles, TrendingUp, Zap, X } from "lucide-react";
 import { motion } from "framer-motion";
 
 function TypingText({ text, speed = 100 }: { text: string; speed?: number }) {
@@ -76,6 +76,7 @@ export function ModernGTAHero({ onShopClick, onPackagesClick, onRankingsClick }:
   // Use database image if available, otherwise fallback to default
   const backgroundImage = heroSetting?.backgroundImage || gta1;
   const videoThumbnail = heroSetting?.videoThumbnail || trailerThumb;
+  const [showTrailer, setShowTrailer] = useState(false);
 
   return (
     <section className="relative min-h-screen bg-black overflow-hidden flex items-center pt-16">
@@ -234,10 +235,8 @@ export function ModernGTAHero({ onShopClick, onPackagesClick, onRankingsClick }:
               </h3>
               
               {/* Video Thumbnail with Enhanced Effects */}
-              <a 
-                href="https://youtu.be/tV95N0TIltc" 
-                target="_blank" 
-                rel="noopener noreferrer"
+              <button 
+                onClick={() => setShowTrailer(true)}
                 className="relative block w-full aspect-video rounded-lg overflow-hidden group cursor-pointer shadow-2xl border-2 border-neon-yellow/20 hover:border-neon-yellow/60 transition-all duration-300"
                 data-testid="link-release-trailer"
               >
@@ -266,7 +265,7 @@ export function ModernGTAHero({ onShopClick, onPackagesClick, onRankingsClick }:
                 {/* Corner Accents */}
                 <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-neon-yellow/50 group-hover:border-neon-yellow transition-colors duration-300" />
                 <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-neon-yellow/50 group-hover:border-neon-yellow transition-colors duration-300" />
-              </a>
+              </button>
             </div>
           </motion.div>
         </div>
@@ -274,6 +273,33 @@ export function ModernGTAHero({ onShopClick, onPackagesClick, onRankingsClick }:
 
       {/* Bottom Gradient Fade */}
       <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-black to-transparent pointer-events-none" />
+
+      {/* Video Modal */}
+      {showTrailer && (
+        <div 
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm"
+          onClick={() => setShowTrailer(false)}
+        >
+          <div 
+            className="relative w-full max-w-4xl mx-4 aspect-video"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              onClick={() => setShowTrailer(false)}
+              className="absolute -top-12 right-0 text-white hover:text-neon-yellow transition-colors"
+            >
+              <X className="w-8 h-8" />
+            </button>
+            <iframe
+              src="https://www.youtube.com/embed/z_Ix7Ybq8hQ?autoplay=1&rel=0"
+              title="Release Trailer"
+              className="w-full h-full rounded-lg border-2 border-neon-yellow/30"
+              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+              allowFullScreen
+            />
+          </div>
+        </div>
+      )}
     </section>
   );
 }
