@@ -960,6 +960,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Billplz completion fallback (if redirect URL is set to /completion in Billplz dashboard)
+  app.get("/completion", async (req, res) => {
+    try {
+      // Billplz might send billplz[id], billplz[paid], etc. as query params
+      const billplz = req.query.billplz as Record<string, string> | undefined;
+      
+      if (billplz?.id && billplz?.paid === 'true') {
+        // Redirect to the proper return handler
+        const queryString = Object.keys(billplz)
+          .map(key => `billplz[${key}]=${encodeURIComponent(billplz[key])}`)
+          .join('&');
+        return res.redirect(`/api/billplz/return?${queryString}`);
+      }
+      
+      // If no valid payment data, redirect to home
+      res.redirect('/');
+    } catch (error) {
+      console.error("Completion redirect error:", error);
+      res.redirect('/');
+    }
+  });
+
   // Billplz return handler (user redirected here after payment) - SECURE VERSION
   // Billplz redirects as: GET /api/billplz/return?billplz[id]=xxx&billplz[paid]=true&billplz[paid_at]=xxx&billplz[x_signature]=xxx
   app.get("/api/billplz/return", async (req, res) => {
