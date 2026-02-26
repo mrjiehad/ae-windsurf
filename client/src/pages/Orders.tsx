@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { useQuery } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -17,15 +17,16 @@ import {
   Check,
   Mail,
   ShoppingBag,
-  User as UserIcon
+  User as UserIcon,
+  PartyPopper
 } from "lucide-react";
 import { SiDiscord } from "react-icons/si";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import type { Order, RedemptionCode } from "@shared/schema";
 
-function OrderCard({ order }: { order: Order }) {
-  const [expanded, setExpanded] = useState(false);
+function OrderCard({ order, autoExpand = false }: { order: Order; autoExpand?: boolean }) {
+  const [expanded, setExpanded] = useState(autoExpand);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const { toast } = useToast();
 
@@ -168,13 +169,37 @@ function OrderCard({ order }: { order: Order }) {
 }
 
 export default function Orders() {
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const { user } = useAuth();
+  const { toast } = useToast();
+  const [showSuccessBanner, setShowSuccessBanner] = useState(false);
+  const [paymentProvider, setPaymentProvider] = useState<string | null>(null);
 
   const { data: orders = [], isLoading } = useQuery<Order[]>({
     queryKey: ["/api/orders"],
     enabled: !!user,
   });
+
+  // Check for payment success in URL
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const paymentStatus = params.get('payment');
+    const provider = params.get('provider');
+    
+    if (paymentStatus === 'success' && provider) {
+      setShowSuccessBanner(true);
+      setPaymentProvider(provider);
+      
+      toast({
+        title: "🎉 Payment Successful!",
+        description: "Your order has been confirmed. Check your redemption codes below.",
+        duration: 5000,
+      });
+      
+      // Clean URL after showing notification
+      window.history.replaceState({}, '', '/orders');
+    }
+  }, [toast]);
 
   if (!user) {
     navigate("/");
@@ -211,7 +236,47 @@ export default function Orders() {
       </header>
 
       <div className="container mx-auto px-4 py-8">
-        {/* User Profile Section */}
+        {/* Success Banner */}
+        {showSuccessBanner && orders.length > 0 && (
+          <div className="mb-6 bg-gradient-to-r from-green-500/20 to-neon-yellow/20 border-2 border-green-500/50 rounded-2xl p-6 animate-in fade-in slide-in-from-top-4 duration-500">
+            <div className="flex items-start gap-4">
+              <div className="bg-green-500 rounded-full p-3">
+                <PartyPopper className="w-6 h-6 text-white" />
+              </div>
+              <div className="flex-1">
+                <h3 className="text-2xl font-bebas text-white mb-2">
+                  PAYMENT SUCCESSFUL!
+                </h3>
+                <p className="text-gray-300 font-rajdhani mb-3">
+                  Your payment via <span className="text-neon-yellow font-bold">{paymentProvider}</span> has been confirmed. 
+                  Your redemption codes are ready below!
+                </p>
+                <div className="bg-black/30 rounded-lg p-3 border border-neon-yellow/30">
+                  <p className="text-sm text-gray-300 font-rajdhani">
+                    <CheckCircle className="w-4 h-4 text-green-500 inline mr-2" />
+                    Order has been added to your account
+                  </p>
+                  <p className="text-sm text-gray-300 font-rajdhani mt-1">
+                    <CheckCircle className="w-4 h-4 text-green-500 inline mr-2" />
+                    Redemption codes generated and ready to use
+                  </p>
+                  <p className="text-sm text-gray-300 font-rajdhani mt-1">
+                    <CheckCircle className="w-4 h-4 text-green-500 inline mr-2" />
+                    Confirmation email sent to your inbox
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setShowSuccessBanner(false)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                ✕
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* User Profile Section */
         <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#000000] border-2 border-neon-yellow/30 rounded-3xl mb-8">
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
@@ -295,8 +360,12 @@ export default function Orders() {
             </Card>
           ) : (
             <div className="grid gap-4">
-              {orders.map((order) => (
-                <OrderCard key={order.id} order={order} />
+              {orders.map((order, index) => (
+                <OrderCard 
+                  key={order.id} 
+                  order={order} 
+                  autoExpand={showSuccessBanner && index === 0}
+                />
               ))}
             </div>
           )}
