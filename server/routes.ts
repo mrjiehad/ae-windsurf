@@ -10,6 +10,7 @@ import { sendOrderConfirmationEmail } from "./email";
 import { insertRedemptionCodeToFiveM } from "./fivem-db";
 import { createBill, getPaymentUrl, getBillTransactions } from "./toyyibpay";
 import { createBill as createBillplzBill, getBill, verifyBillPayment, verifyBillplzCallbackSignature, verifyBillplzRedirectSignature } from "./billplz";
+import { sendDiscordOrderNotification } from "./discord-webhook";
 import "./types";
 import crypto from "crypto";
 import bcrypt from "bcrypt";
@@ -733,6 +734,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         console.error("Failed to send order confirmation email:", emailError);
       }
 
+      // Send Discord notification (soft fail)
+      try {
+        const user = await storage.getUser(pendingPayment.userId);
+        const totalCoins = cartSnapshot.reduce((sum: number, item: any) => 
+          sum + (item.aecoinAmount * item.quantity), 0
+        );
+        
+        await sendDiscordOrderNotification({
+          username: user?.username || 'Unknown',
+          coins: totalCoins,
+          paymentMethod: 'ToyyibPay',
+          amount: pendingPayment.amount,
+          orderId: order.id,
+          timestamp: new Date(),
+        });
+      } catch (discordError) {
+        console.error("Failed to send Discord notification:", discordError);
+      }
+
       console.log(`✓ Order ${order.id} fulfilled via ToyyibPay`);
       res.redirect(`/orders?payment=success&provider=toyyibpay`);
     } catch (error) {
@@ -1077,6 +1097,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         }
       } catch (emailError) {
         console.error("Failed to send order confirmation email:", emailError);
+      }
+
+      // Send Discord notification (soft fail)
+      try {
+        const user = await storage.getUser(pendingPayment.userId);
+        const totalCoins = cartSnapshot.reduce((sum: number, item: any) => 
+          sum + (item.aecoinAmount * item.quantity), 0
+        );
+        
+        await sendDiscordOrderNotification({
+          username: user?.username || 'Unknown',
+          coins: totalCoins,
+          paymentMethod: 'Billplz',
+          amount: pendingPayment.amount,
+          orderId: order.id,
+          timestamp: new Date(),
+        });
+      } catch (discordError) {
+        console.error("Failed to send Discord notification:", discordError);
       }
 
       console.log(`✓ Order ${order.id} fulfilled via Billplz`);
