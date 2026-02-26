@@ -18,17 +18,24 @@ import {
   Mail,
   ShoppingBag,
   User as UserIcon,
-  PartyPopper
+  PartyPopper,
+  X
 } from "lucide-react";
 import { SiDiscord } from "react-icons/si";
 import { useAuth } from "@/lib/auth";
 import { useToast } from "@/hooks/use-toast";
 import type { Order, RedemptionCode } from "@shared/schema";
 
-function OrderCard({ order, autoExpand = false }: { order: Order; autoExpand?: boolean }) {
-  const [expanded, setExpanded] = useState(autoExpand);
+function OrderCard({ order, autoExpand }: { order: Order; autoExpand?: boolean }) {
+  const [expanded, setExpanded] = useState(autoExpand || false);
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (autoExpand) {
+      setExpanded(true);
+    }
+  }, [autoExpand]);
 
   const { data: codes = [], isLoading: loadingCodes } = useQuery<RedemptionCode[]>({
     queryKey: [`/api/orders/${order.id}/codes`],
@@ -171,35 +178,29 @@ function OrderCard({ order, autoExpand = false }: { order: Order; autoExpand?: b
 export default function Orders() {
   const [location, navigate] = useLocation();
   const { user } = useAuth();
-  const { toast } = useToast();
   const [showSuccessBanner, setShowSuccessBanner] = useState(false);
-  const [paymentProvider, setPaymentProvider] = useState<string | null>(null);
+  const [autoExpandedOrderId, setAutoExpandedOrderId] = useState<string | null>(null);
 
   const { data: orders = [], isLoading } = useQuery<Order[]>({
     queryKey: ["/api/orders"],
     enabled: !!user,
   });
 
-  // Check for payment success in URL
+  // Check for payment success query parameter
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const paymentStatus = params.get('payment');
     const provider = params.get('provider');
     
-    if (paymentStatus === 'success' && provider) {
+    if (paymentStatus === 'success' && orders.length > 0) {
       setShowSuccessBanner(true);
-      setPaymentProvider(provider);
-      
-      toast({
-        title: "🎉 Payment Successful!",
-        description: "Your order has been confirmed. Check your redemption codes below.",
-        duration: 5000,
-      });
-      
-      // Clean URL after showing notification
-      window.history.replaceState({}, '', '/orders');
+      // Auto-expand the latest order (first in the list)
+      const latestOrder = orders[0];
+      if (latestOrder && (latestOrder.status === 'fulfilled' || latestOrder.status === 'completed')) {
+        setAutoExpandedOrderId(latestOrder.id);
+      }
     }
-  }, [toast]);
+  }, [orders]);
 
   if (!user) {
     navigate("/");
@@ -237,46 +238,41 @@ export default function Orders() {
 
       <div className="container mx-auto px-4 py-8">
         {/* Success Banner */}
-        {showSuccessBanner && orders.length > 0 && (
-          <div className="mb-6 bg-gradient-to-r from-green-500/20 to-neon-yellow/20 border-2 border-green-500/50 rounded-2xl p-6 animate-in fade-in slide-in-from-top-4 duration-500">
+        {showSuccessBanner && (
+          <div className="mb-8 bg-gradient-to-r from-green-500/20 to-neon-yellow/20 border-2 border-green-500/50 rounded-3xl p-6 relative animate-in fade-in slide-in-from-top-4 duration-500">
+            <button
+              onClick={() => setShowSuccessBanner(false)}
+              className="absolute top-4 right-4 text-white/60 hover:text-white transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
             <div className="flex items-start gap-4">
-              <div className="bg-green-500 rounded-full p-3">
-                <PartyPopper className="w-6 h-6 text-white" />
+              <div className="bg-green-500/20 p-3 rounded-full">
+                <PartyPopper className="w-8 h-8 text-green-400" />
               </div>
               <div className="flex-1">
-                <h3 className="text-2xl font-bebas text-white mb-2">
-                  PAYMENT SUCCESSFUL!
+                <h3 className="text-2xl font-bebas text-white mb-2 uppercase tracking-wider">
+                  🎉 Payment Successful!
                 </h3>
                 <p className="text-gray-300 font-rajdhani mb-3">
-                  Your payment via <span className="text-neon-yellow font-bold">{paymentProvider}</span> has been confirmed. 
-                  Your redemption codes are ready below!
+                  Thank you for your purchase! Your redemption codes are ready below.
                 </p>
-                <div className="bg-black/30 rounded-lg p-3 border border-neon-yellow/30">
-                  <p className="text-sm text-gray-300 font-rajdhani">
-                    <CheckCircle className="w-4 h-4 text-green-500 inline mr-2" />
-                    Order has been added to your account
+                <div className="bg-black/30 border border-neon-yellow/30 rounded-xl p-4">
+                  <p className="text-sm text-gray-300 font-rajdhani mb-2 font-bold">
+                    📋 How to redeem your AECOIN:
                   </p>
-                  <p className="text-sm text-gray-300 font-rajdhani mt-1">
-                    <CheckCircle className="w-4 h-4 text-green-500 inline mr-2" />
-                    Redemption codes generated and ready to use
-                  </p>
-                  <p className="text-sm text-gray-300 font-rajdhani mt-1">
-                    <CheckCircle className="w-4 h-4 text-green-500 inline mr-2" />
-                    Confirmation email sent to your inbox
-                  </p>
+                  <ol className="text-sm text-gray-400 font-rajdhani space-y-1 list-decimal list-inside">
+                    <li>Join the GTA 5 server</li>
+                    <li>Open the chat and type: <code className="text-neon-yellow bg-black/50 px-2 py-0.5 rounded">/redeem [code]</code></li>
+                    <li>Your AECOIN will be added to your account instantly!</li>
+                  </ol>
                 </div>
               </div>
-              <button
-                onClick={() => setShowSuccessBanner(false)}
-                className="text-gray-400 hover:text-white transition-colors"
-              >
-                ✕
-              </button>
             </div>
           </div>
         )}
 
-        {/* User Profile Section */
+        {/* User Profile Section */}
         <Card className="bg-gradient-to-br from-[#1a1a1a] to-[#000000] border-2 border-neon-yellow/30 rounded-3xl mb-8">
           <CardContent className="p-8">
             <div className="flex flex-col md:flex-row items-center md:items-start gap-6">
@@ -360,11 +356,11 @@ export default function Orders() {
             </Card>
           ) : (
             <div className="grid gap-4">
-              {orders.map((order, index) => (
+              {orders.map((order) => (
                 <OrderCard 
                   key={order.id} 
                   order={order} 
-                  autoExpand={showSuccessBanner && index === 0}
+                  autoExpand={order.id === autoExpandedOrderId}
                 />
               ))}
             </div>
